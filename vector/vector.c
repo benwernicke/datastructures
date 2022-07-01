@@ -58,6 +58,20 @@ ds_error_t vector_more(vector_t* v, void** more)
 
 ds_error_t vector_remove(vector_t* v, uint64_t index)
 {
+    if (index >= v->used) {
+        return DS_INDEX_OUT_OF_BOUND;
+    }
     memmove(v->buf + index, v->buf + index + 1, v->used * sizeof(*v->buf));
+    v->used--;
+    return DS_SUCCESS;
+}
+
+ds_error_t vector_get(vector_t* v, uint64_t index, void** ret)
+{
+    if (index >= v->used) {
+
+        return DS_INDEX_OUT_OF_BOUND;
+    }
+    *ret = v->buf[index];
     return DS_SUCCESS;
 }

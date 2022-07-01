@@ -13,5 +13,6 @@ ds_error_t vector_begin(vector_t* v, void** begin);
 ds_error_t vector_end(vector_t* v, void** end);
 ds_error_t vector_size(vector_t* v, uint64_t* size);
 ds_error_t vector_more(vector_t* v, void** more);
+ds_error_t vector_get(vector_t* v, uint64_t index, void** ret);
 
 #endif
