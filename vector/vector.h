@@ -1,7 +1,7 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
-#include "ds_error.h"
+#include "../ds_error/ds_error.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
