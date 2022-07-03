@@ -109,7 +109,7 @@ ds_error_t buffer_begin(buffer_t* b, void** begin)
 
 ds_error_t buffer_end(buffer_t* b, void** end)
 {
-    *end = b->buf + b->used;
+    *end = b->buf + b->used * b->member_size;
     return SUCCESS;
 }
 

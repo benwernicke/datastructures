@@ -24,7 +24,7 @@ void test_delete(void)
     uint64_t i;
     for (i = 0; i < NUM_TESTS; i++) {
         nums[i] = i;
-        if (hashset_set(hs, &nums[i]) != DS_SUCCESS) {
+        if (hashset_set(hs, &nums[i]) != SUCCESS) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
     }
@@ -36,7 +36,7 @@ void test_delete(void)
 
     bool b;
     for (i = 0; i < NUM_TESTS; i++) {
-        if (hashset_has(hs, &nums[i], &b) != DS_SUCCESS) {
+        if (hashset_has(hs, &nums[i], &b) != SUCCESS) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
         if (i % 2 == 0) {
@@ -59,13 +59,13 @@ void test_get_set()
         nums[i] = rand();
     }
     for (i = 0; i < NUM_TESTS; i++) {
-        if (hashset_set(hs, &nums[i]) != DS_SUCCESS) {
+        if (hashset_set(hs, &nums[i]) != SUCCESS) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
     }
     bool b;
     for (i = 0; i < NUM_TESTS; i++) {
-        if (hashset_has(hs, &nums[i], &b) != DS_SUCCESS) {
+        if (hashset_has(hs, &nums[i], &b) != SUCCESS) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
         test_bool((char*)__func__, b);
@@ -84,7 +84,7 @@ void test_get_keys_size()
         nums[i] = rand();
     }
     for (i = 0; i < NUM_TESTS; i++) {
-        if (hashset_set(hs, &nums[i]) != DS_SUCCESS) {
+        if (hashset_set(hs, &nums[i]) != SUCCESS) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
     }
