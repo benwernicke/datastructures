@@ -22,13 +22,13 @@ ds_error_t vector_create(vector_t** v, uint64_t init_size)
     return SUCCESS;
 }
 
-ds_error_t vector_begin(vector_t* v, void** begin)
+ds_error_t vector_begin(vector_t* v, void*** begin)
 {
     *begin = v->buf;
     return SUCCESS;
 }
 
-ds_error_t vector_end(vector_t* v, void** end)
+ds_error_t vector_end(vector_t* v, void*** end)
 {
     *end = &v->buf[v->used];
     return SUCCESS;
@@ -40,11 +40,11 @@ ds_error_t vector_size(vector_t* v, uint64_t* size)
     return SUCCESS;
 }
 
-ds_error_t vector_more(vector_t* v, void** more)
+ds_error_t vector_more(vector_t* v, void*** more)
 {
     if (v->used >= v->allocated) {
         uint64_t new_allocated = v->allocated << 1;
-        void* new_buf = realloc(v->buf, new_allocated);
+        void** new_buf = realloc(v->buf, sizeof(*new_buf) * new_allocated);
         if (new_buf == NULL) {
             *more = NULL;
             return BAD_ALLOC;
@@ -61,6 +61,10 @@ ds_error_t vector_remove(vector_t* v, uint64_t index)
     if (index >= v->used) {
         return INDEX_OUT_OF_BOUND;
     }
+    if (index == v->used - 1) {
+        v->used--;
+        return SUCCESS;
+    }
     memmove(v->buf + index, v->buf + index + 1, v->used * sizeof(*v->buf));
     v->used--;
     return SUCCESS;
@@ -69,9 +73,18 @@ ds_error_t vector_remove(vector_t* v, uint64_t index)
 ds_error_t vector_get(vector_t* v, uint64_t index, void** ret)
 {
     if (index >= v->used) {
-
         return INDEX_OUT_OF_BOUND;
     }
     *ret = v->buf[index];
+    return SUCCESS;
+}
+
+ds_error_t vector_free(vector_t* v)
+{
+    if (v == NULL) {
+        return SUCCESS;
+    }
+    free(v->buf);
+    free(v);
     return SUCCESS;
 }
