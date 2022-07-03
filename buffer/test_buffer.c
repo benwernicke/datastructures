@@ -6,7 +6,7 @@
 void test_buffer_from_range()
 {
     buffer_t* b;
-    if (buffer_create(&b, 1, sizeof(uint64_t)) != DS_SUCCESS) {
+    if (buffer_create(&b, 1, sizeof(uint64_t)) != SUCCESS) {
         fprintf(stderr, "error: create: %s\n", __func__);
         exit(1);
     }
@@ -20,7 +20,7 @@ void test_buffer_from_range()
 
     uint64_t* value = NULL;
     for (i = 0; i < NUM_TESTS; i++) {
-        if (buffer_more(b, (void**)&value) != DS_SUCCESS) {
+        if (buffer_more(b, (void**)&value) != SUCCESS) {
             fprintf(stderr, "error: more: %s\n", __func__);
             exit(1);
         }
@@ -30,7 +30,7 @@ void test_buffer_from_range()
     buffer_t* bra;
     buffer_t* brb;
 
-    if (buffer_create_from_range(&bra, NUM_TESTS, sizeof(uint64_t), nums, sizeof(nums)) != DS_SUCCESS) {
+    if (buffer_create_from_range(&bra, NUM_TESTS, sizeof(uint64_t), nums, sizeof(nums)) != SUCCESS) {
         fprintf(stderr, "error: create: %s\n", __func__);
         exit(1);
     }
@@ -39,7 +39,7 @@ void test_buffer_from_range()
     buffer_begin(b, (void**)&begin);
     buffer_end(b, (void**)&end);
 
-    if (buffer_create_from_range(&brb, NUM_TESTS, sizeof(uint64_t), begin, NUM_TESTS * sizeof(uint64_t)) != DS_SUCCESS) {
+    if (buffer_create_from_range(&brb, NUM_TESTS, sizeof(uint64_t), begin, NUM_TESTS * sizeof(uint64_t)) != SUCCESS) {
         fprintf(stderr, "error: create: %s\n", __func__);
         exit(1);
     }
@@ -72,7 +72,7 @@ void test_buffer_from_range()
 void test_more_get()
 {
     buffer_t* b;
-    if (buffer_create(&b, 1, sizeof(uint64_t)) != DS_SUCCESS) {
+    if (buffer_create(&b, 1, sizeof(uint64_t)) != SUCCESS) {
         fprintf(stderr, "error: create: %s\n", __func__);
         exit(1);
     }
@@ -86,7 +86,7 @@ void test_more_get()
 
     uint64_t* value = NULL;
     for (i = 0; i < NUM_TESTS; i++) {
-        if (buffer_more(b, (void**)&value) != DS_SUCCESS) {
+        if (buffer_more(b, (void**)&value) != SUCCESS) {
             fprintf(stderr, "error: more: %s\n", __func__);
             exit(1);
         }
@@ -101,7 +101,7 @@ void test_more_get()
     test_bool((char*)__func__, memcmp(begin, nums, sizeof(nums)) == 0);
 
     for (i = 0; i < NUM_TESTS; i++) {
-        if (buffer_get(b, i, (void**)&value) != DS_SUCCESS) {
+        if (buffer_get(b, i, (void**)&value) != SUCCESS) {
             fprintf(stderr, "error: more: %s\n", __func__);
             exit(1);
         }
@@ -114,7 +114,7 @@ void test_more_get()
 void test_size_remove_ptr()
 {
     buffer_t* b;
-    if (buffer_create(&b, 1, sizeof(uint64_t)) != DS_SUCCESS) {
+    if (buffer_create(&b, 1, sizeof(uint64_t)) != SUCCESS) {
         fprintf(stderr, "error: create: %s\n", __func__);
         exit(1);
     }
@@ -126,7 +126,7 @@ void test_size_remove_ptr()
 
     uint64_t* value = NULL;
     for (i = 0; i < NUM_TESTS; i++) {
-        if (buffer_more(b, (void**)&value) != DS_SUCCESS) {
+        if (buffer_more(b, (void**)&value) != SUCCESS) {
             fprintf(stderr, "error: more: %s\n", __func__);
             exit(1);
         }
@@ -140,7 +140,7 @@ void test_size_remove_ptr()
     buffer_begin(b, (void**)&begin);
 
     test_bool((char*)__func__, memcmp(begin, nums, sizeof(nums)) == 0);
-    if (buffer_index_from_ptr(b, begin, &i) != DS_SUCCESS) {
+    if (buffer_index_from_ptr(b, begin, &i) != SUCCESS) {
         fprintf(stderr, "error: index_from_ptr: %s\n", __func__);
         exit(1);
     }
@@ -173,7 +173,7 @@ void test_size_remove_ptr()
 void test_size_remove()
 {
     buffer_t* b;
-    if (buffer_create(&b, 1, sizeof(uint64_t)) != DS_SUCCESS) {
+    if (buffer_create(&b, 1, sizeof(uint64_t)) != SUCCESS) {
         fprintf(stderr, "error: create: %s\n", __func__);
         exit(1);
     }
@@ -185,7 +185,7 @@ void test_size_remove()
 
     uint64_t* value = NULL;
     for (i = 0; i < NUM_TESTS; i++) {
-        if (buffer_more(b, (void**)&value) != DS_SUCCESS) {
+        if (buffer_more(b, (void**)&value) != SUCCESS) {
             fprintf(stderr, "error: more: %s\n", __func__);
             exit(1);
         }

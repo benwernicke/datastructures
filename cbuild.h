@@ -183,9 +183,12 @@ void compile_object_directory(char* out, char* flags, char* path)
                     cmd_len <<= 1;
                     cmd = realloc(cmd, cmd_len);
                 }
-                cmd_used += len + 1;
+                cmd_used += len + 2;
                 strcat(cmd, " ");
                 strcat(cmd, path);
+                if (path[strlen(path) - 1] != '/') {
+                    strcat(cmd, "/");
+                }
                 strcat(cmd, entry->d_name);
             }
         }
