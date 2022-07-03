@@ -15,5 +15,8 @@ ds_error_t buffer_more(buffer_t* b, void** ret);
 ds_error_t buffer_free(buffer_t* b);
 ds_error_t buffer_get(buffer_t* b, uint64_t index, void** ret);
 ds_error_t buffer_create(buffer_t** b, uint64_t initial_size, uint64_t member_size);
+ds_error_t buffer_remove_ptr(buffer_t* b, void* ptr);
+ds_error_t buffer_index_from_ptr(buffer_t* b, void* ptr, uint64_t* index);
+ds_error_t buffer_create_from_range(buffer_t** b, uint64_t initial_size, uint64_t member_size, void* range, uint64_t range_size);
 
 #endif

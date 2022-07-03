@@ -20,6 +20,17 @@ ds_error_t buffer_create(buffer_t** b, uint64_t initial_size, uint64_t member_si
     return DS_SUCCESS;
 }
 
+ds_error_t buffer_create_from_range(buffer_t** b, uint64_t initial_size, uint64_t member_size, void* range, uint64_t range_size)
+{
+    ds_error_t err = buffer_create(b, initial_size, member_size);
+    if (err != DS_SUCCESS) {
+        return err;
+    }
+    memcpy((*b)->buf, range, range_size);
+    (*b)->used = range_size / member_size;
+    return DS_SUCCESS;
+}
+
 ds_error_t buffer_get(buffer_t* b, uint64_t index, void** ret)
 {
     if (index >= b->used) {
@@ -69,6 +80,25 @@ ds_error_t buffer_remove(buffer_t* b, uint64_t index)
     b->used--;
     // TODO: realloc
     return DS_SUCCESS;
+}
+
+ds_error_t buffer_index_from_ptr(buffer_t* b, void* ptr, uint64_t* index)
+{
+    *index = (uint64_t)((uint8_t*)ptr - b->buf) / b->member_size;
+    if (*index >= b->used) {
+        return DS_INDEX_OUT_OF_BOUND;
+    }
+    return DS_SUCCESS;
+}
+
+ds_error_t buffer_remove_ptr(buffer_t* b, void* ptr)
+{
+    uint64_t index = 0;
+    ds_error_t err = buffer_index_from_ptr(b, ptr, &index);
+    if (err != DS_SUCCESS) {
+        return err;
+    }
+    return buffer_remove(b, index);
 }
 
 ds_error_t buffer_begin(buffer_t* b, void** begin)
