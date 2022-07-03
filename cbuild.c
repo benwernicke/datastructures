@@ -11,6 +11,14 @@ void compile_vector()
     compile_object_directory("vector/main", FLAGS, "vector/build/");
 }
 
+void compile_path()
+{
+    compile_object("path/path.c", FLAGS, "path/build/path.o");
+    compile_object("test/test.c", FLAGS, "path/build/test.o");
+    compile_object("path/test_path.c", FLAGS, "path/build/test_path.o");
+    compile_object_directory("path/main", FLAGS, "path/build/");
+}
+
 void clean()
 {
     printf("rm ./vector/build/*\n");
@@ -33,6 +41,13 @@ void clean()
     system("rm ./buffer/main");
     printf("rm ./buffer/log.log*\n");
     system("rm ./buffer/log.log*");
+
+    printf("rm ./path/build/*\n");
+    system("rm ./path/build/*");
+    printf("rm ./path/main\n");
+    system("rm ./path/main");
+    printf("rm ./path/log.log*\n");
+    system("rm ./path/log.log*");
 }
 
 void compile_buffer()
@@ -56,37 +71,47 @@ void valgrind()
     system("valgrind --show-leak-kinds=all --log-file=buffer/log.log --leak-check=full buffer/main");
     system("valgrind --show-leak-kinds=all --log-file=vector/log.log --leak-check=full vector/main");
     system("valgrind --show-leak-kinds=all --log-file=hashset/log.log --leak-check=full hashset/main");
+    system("valgrind --show-leak-kinds=all --log-file=path/log.log --leak-check=full path/main");
+}
+
+void compile_all()
+{
+    compile_hashset();
+    compile_hashset();
+    compile_vector();
+    compile_buffer();
+    compile_path();
+    compile_vector();
+    compile_buffer();
+    compile_path();
 }
 
 int main(int argc, char** argv)
 {
     auto_update();
     if (argc == 1) {
-        compile_hashset();
-        compile_vector();
-        compile_buffer();
+        compile_all();
     } else {
         if (strcmp(argv[1], "vector") == 0) {
             compile_vector();
+            system("vector/main");
         } else if (strcmp(argv[1], "hashset") == 0) {
             compile_hashset();
+            system("hashset/main");
         } else if (strcmp(argv[1], "clean") == 0) {
             clean();
-        } else if (strcmp(argv[1], "test-hashset") == 0) {
-            compile_hashset();
-            system("hashset/main");
-        } else if (strcmp(argv[1], "test-vector") == 0) {
-            compile_vector();
-            system("vector/main");
         } else if (strcmp(argv[1], "buffer") == 0) {
-            compile_buffer();
-        } else if (strcmp(argv[1], "test-buffer") == 0) {
             compile_buffer();
             system("buffer/main");
         } else if (strcmp(argv[1], "valgrind") == 0) {
+            clean();
+            compile_all();
             valgrind();
+        } else if (strcmp(argv[1], "path") == 0) {
+            compile_path();
+            system("path/main");
         } else {
-            fprintf(stderr, "unrecognised option: %s\n", argv[1]);
+            fprintf(stderr, "unknown option: %s\n", argv[1]);
         }
     }
 }
