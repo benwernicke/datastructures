@@ -15,14 +15,14 @@ ds_error_t hashset_create(hashset_t** hs, hashset_hash_function_t hash, hashset_
     if (*hs == NULL) {
         return DS_BAD_ALLOC;
     }
-    (*hs)->table = calloc(initial_size * 4, sizeof(*(*hs)->table));
+    (*hs)->table = calloc(initial_size << 2, sizeof(*(*hs)->table));
     if ((*hs)->table == NULL) {
         free((*hs)->table);
         free(*hs);
         *hs = NULL;
         return DS_BAD_ALLOC;
     }
-    (*hs)->allocated = initial_size * 4;
+    (*hs)->allocated = initial_size << 2;
     (*hs)->used = 0;
     (*hs)->cmp = cmp;
     (*hs)->hash = hash;
@@ -73,7 +73,7 @@ static ds_error_t hashset_realloc_(hashset_t* hs)
 
 ds_error_t hashset_set(hashset_t* hs, void* key)
 {
-    if (hs->used * 4 >= hs->allocated) {
+    if (hs->used << 2 >= hs->allocated) {
         ds_error_t err = hashset_realloc_(hs);
         if (err != DS_SUCCESS) {
             return err;
@@ -98,7 +98,7 @@ ds_error_t hashset_get_keys(hashset_t* hs, void** buf, uint64_t buf_len)
 {
     uint64_t i = 0;
     void** ptr;
-    for (ptr = hs->table; i < buf_len && ptr != hs->table + (hs->allocated * 4); ptr++) {
+    for (ptr = hs->table; i < buf_len && ptr != hs->table + hs->allocated; ptr++) {
         if (*ptr != NULL) {
             buf[i++] = *ptr;
         }

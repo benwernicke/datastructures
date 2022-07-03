@@ -19,7 +19,7 @@ void test_uint_eq(char* desc, uint64_t a, uint64_t b)
 
 void test_total()
 {
-    printf("passed %lu/%lu: ", passed_tests, total_tests);
+    printf("passed \t\t%lu/%lu: ", passed_tests, total_tests);
     if (total_tests == passed_tests) {
         printf(GREEN "success\n" RESET);
     } else {
@@ -31,9 +31,9 @@ void test_bool(char* desc, bool b)
 {
     total_tests++;
     if (b) {
-        printf("%s: " GREEN "success\n"RESET, desc);
+        printf("%s\t\t: " GREEN "success\n"RESET, desc);
         passed_tests++;
     } else {
-        printf("%s: " RED "failed\n"RESET, desc);
+        printf("%s\t\t: " RED "failed\n"RESET, desc);
     }
 }

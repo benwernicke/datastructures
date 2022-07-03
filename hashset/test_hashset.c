@@ -108,6 +108,7 @@ void test_get_keys_size()
         }
         test_bool((char*)__func__, *ptr_real_keys == *ptr_keys);
     }
+    hashset_free(hs);
 }
 int main(void)
 {
