@@ -11,6 +11,14 @@ void compile_vector()
     compile_object_directory("vector/main", FLAGS, "vector/build/");
 }
 
+void compile_hashmap()
+{
+    compile_object("hashmap/hashmap.c", FLAGS, "hashmap/build/hashmap.o");
+    compile_object("test/test.c", FLAGS, "hashmap/build/test.o");
+    compile_object("hashmap/test_hashmap.c", FLAGS, "hashmap/build/test_hashmap.o");
+    compile_object_directory("hashmap/main", FLAGS, "hashmap/build/");
+}
+
 void compile_path()
 {
     compile_object("path/path.c", FLAGS, "path/build/path.o");
@@ -42,6 +50,13 @@ void clean()
     printf("rm ./buffer/log.log*\n");
     system("rm ./buffer/log.log*");
 
+    printf("rm ./hashmap/build/*\n");
+    system("rm ./hashmap/build/*");
+    printf("rm ./hashmap/main\n");
+    system("rm ./hashmap/main");
+    printf("rm ./hashmap/log.log*\n");
+    system("rm ./hashmap/log.log*");
+
     printf("rm ./path/build/*\n");
     system("rm ./path/build/*");
     printf("rm ./path/main\n");
@@ -72,6 +87,7 @@ void valgrind()
     system("valgrind --show-leak-kinds=all --log-file=vector/log.log --leak-check=full vector/main");
     system("valgrind --show-leak-kinds=all --log-file=hashset/log.log --leak-check=full hashset/main");
     system("valgrind --show-leak-kinds=all --log-file=path/log.log --leak-check=full path/main");
+    system("valgrind --show-leak-kinds=all --log-file=hashmap/log.log --leak-check=full hashmap/main");
 }
 
 void compile_all()
@@ -84,6 +100,7 @@ void compile_all()
     compile_vector();
     compile_buffer();
     compile_path();
+    compile_hashmap();
 }
 
 int main(int argc, char** argv)
@@ -110,6 +127,9 @@ int main(int argc, char** argv)
         } else if (strcmp(argv[1], "path") == 0) {
             compile_path();
             system("path/main");
+        } else if (strcmp(argv[1], "hashmap") == 0) {
+            compile_hashmap();
+            system("hashmap/main");
         } else {
             fprintf(stderr, "unknown option: %s\n", argv[1]);
         }
