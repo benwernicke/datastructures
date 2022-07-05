@@ -1,15 +1,15 @@
 #include "set.h"
 
-struct hashset_t {
+struct set_t {
     uint64_t allocated;
     uint64_t used;
     void** table;
 
-    hashset_hash_function_t hash;
-    hashset_cmp_function_t cmp;
+    set_hash_function_t hash;
+    set_cmp_function_t cmp;
 };
 
-ds_error_t hashset_create(hashset_t** hs, hashset_hash_function_t hash, hashset_cmp_function_t cmp, uint64_t initial_size)
+ds_error_t set_create(set_t** hs, set_hash_function_t hash, set_cmp_function_t cmp, uint64_t initial_size)
 {
     *hs = malloc(sizeof(**hs));
     if (*hs == NULL) {
@@ -29,7 +29,7 @@ ds_error_t hashset_create(hashset_t** hs, hashset_hash_function_t hash, hashset_
     return SUCCESS;
 }
 
-static uint64_t hashset_get_key_pos_(hashset_t* hs, void* key)
+static uint64_t set_get_key_pos_(set_t* hs, void* key)
 {
     uint64_t i = hs->hash(key) % hs->allocated;
     while (hs->table[i] != NULL && !hs->cmp(key, hs->table[i])) {
@@ -38,28 +38,28 @@ static uint64_t hashset_get_key_pos_(hashset_t* hs, void* key)
     return i;
 }
 
-static ds_error_t hashset_realloc_(hashset_t* hs)
+static ds_error_t set_realloc_(set_t* hs)
 {
-    hashset_t* new_hs;
-    ds_error_t err = hashset_create(&new_hs, hs->hash, hs->cmp, hs->allocated << 2);
+    set_t* new_hs;
+    ds_error_t err = set_create(&new_hs, hs->hash, hs->cmp, hs->allocated << 2);
     if (err != SUCCESS) {
         return err;
     }
     uint64_t size;
-    err = hashset_size(hs, &size);
+    err = set_size(hs, &size);
     if (err != SUCCESS) {
         return err;
     }
     void* keys[size];
-    err = hashset_get_keys(hs, keys, size);
+    err = set_get_keys(hs, keys, size);
     if (err != SUCCESS) {
         return err;
     }
     uint64_t i;
     for (i = 0; i < size; i++) {
-        err = hashset_set(new_hs, keys[i]);
+        err = set_set(new_hs, keys[i]);
         if (err != SUCCESS) {
-            hashset_free(new_hs);
+            set_free(new_hs);
             return err;
         }
     }
@@ -71,15 +71,15 @@ static ds_error_t hashset_realloc_(hashset_t* hs)
     return SUCCESS;
 }
 
-ds_error_t hashset_set(hashset_t* hs, void* key)
+ds_error_t set_set(set_t* hs, void* key)
 {
     if (hs->used << 2 >= hs->allocated) {
-        ds_error_t err = hashset_realloc_(hs);
+        ds_error_t err = set_realloc_(hs);
         if (err != SUCCESS) {
             return err;
         }
     }
-    uint64_t i = hashset_get_key_pos_(hs, key);
+    uint64_t i = set_get_key_pos_(hs, key);
     if (hs->table[i] == NULL) {
         hs->table[i] = key;
         hs->used++;
@@ -87,14 +87,14 @@ ds_error_t hashset_set(hashset_t* hs, void* key)
     return SUCCESS;
 }
 
-ds_error_t hashset_has(hashset_t* hs, void* key, bool* has_key)
+ds_error_t set_has(set_t* hs, void* key, bool* has_key)
 {
-    uint64_t i = hashset_get_key_pos_(hs, key);
+    uint64_t i = set_get_key_pos_(hs, key);
     *has_key = hs->table[i] != NULL;
     return SUCCESS;
 }
 
-ds_error_t hashset_get_keys(hashset_t* hs, void** buf, uint64_t buf_len)
+ds_error_t set_get_keys(set_t* hs, void** buf, uint64_t buf_len)
 {
     uint64_t i = 0;
     void** ptr;
@@ -106,15 +106,15 @@ ds_error_t hashset_get_keys(hashset_t* hs, void** buf, uint64_t buf_len)
     return SUCCESS;
 }
 
-ds_error_t hashset_size(hashset_t* hs, uint64_t* size)
+ds_error_t set_size(set_t* hs, uint64_t* size)
 {
     *size = hs->used;
     return SUCCESS;
 }
 
-ds_error_t hashset_delete(hashset_t* hs, void* key)
+ds_error_t set_delete(set_t* hs, void* key)
 {
-    uint64_t i = hashset_get_key_pos_(hs, key);
+    uint64_t i = set_get_key_pos_(hs, key);
     if (hs->table[i] != NULL) {
         hs->used--;
         hs->table[i] = NULL;
@@ -122,7 +122,7 @@ ds_error_t hashset_delete(hashset_t* hs, void* key)
     return SUCCESS;
 }
 
-ds_error_t hashset_free(hashset_t* hs)
+ds_error_t set_free(set_t* hs)
 {
     if (hs == NULL) {
         return SUCCESS;

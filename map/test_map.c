@@ -18,8 +18,8 @@ uint64_t uint_hash(uint64_t* key)
 
 void test_insert_get(void)
 {
-    hashmap_t* map = NULL;
-    ds_error_t err = hashmap_create(&map, (hashmap_hash_function_t)uint_hash, (hashmap_cmp_function_t)uint_cmp, 1);
+    map_t* map = NULL;
+    ds_error_t err = map_create(&map, (map_hash_function_t)uint_hash, (map_cmp_function_t)uint_cmp, 1);
     if (err != SUCCESS) {
         fprintf(stderr, "error: create %s\n", __func__);
         exit(1);
@@ -34,12 +34,12 @@ void test_insert_get(void)
     uint64_t* value;
 
     for (i = 0; i < NUM_TESTS; i++) {
-        hashmap_get(map, &nums[i], (void**)&value);
+        map_get(map, &nums[i], (void**)&value);
         test_bool((char*)__func__, value == NULL);
     }
 
     for (i = 0; i < NUM_TESTS; i++) {
-        err = hashmap_insert(map, &nums[i], &nums[i]);
+        err = map_insert(map, &nums[i], &nums[i]);
         if (err != SUCCESS) {
             fprintf(stderr, "error: create %s\n", __func__);
             exit(1);
@@ -47,12 +47,12 @@ void test_insert_get(void)
     }
 
     for (i = 0; i < NUM_TESTS; i++) {
-        hashmap_get(map, &nums[i], (void**)&value);
+        map_get(map, &nums[i], (void**)&value);
         test_bool((char*)__func__, value != NULL);
         test_bool((char*)__func__, value == &nums[i]);
     }
 
-    hashmap_free(map);
+    map_free(map);
 }
 
 int main(void)

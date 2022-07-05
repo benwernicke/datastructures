@@ -1,10 +1,10 @@
 #include "map.h"
 
-static uint64_t map_position_(hashmap_t* map, void* key);
-static uint64_t stack_pop_(hashmap_t* map);
-static void stack_push_buf_(hashmap_t* map, uint64_t iter, uint64_t size);
-static void stack_push_(hashmap_t* map, uint64_t i);
-static uint64_t map_size_(hashmap_t* map);
+static uint64_t map_position_(map_t* map, void* key);
+static uint64_t stack_pop_(map_t* map);
+static void stack_push_buf_(map_t* map, uint64_t iter, uint64_t size);
+static void stack_push_(map_t* map, uint64_t i);
+static uint64_t map_size_(map_t* map);
 
 typedef struct entry_t entry_t;
 struct entry_t {
@@ -14,23 +14,23 @@ struct entry_t {
     uint64_t next;
 };
 
-struct hashmap_t {
+struct map_t {
     uint64_t buf_allocated;
     entry_t* buf;
     uint64_t* map;
 
     uint64_t stack;
 
-    hashmap_hash_function_t hash;
-    hashmap_cmp_function_t cmp;
+    map_hash_function_t hash;
+    map_cmp_function_t cmp;
 };
 
-static uint64_t map_size_(hashmap_t* map)
+static uint64_t map_size_(map_t* map)
 {
     return map->buf_allocated << 2;
 }
 
-ds_error_t hashmap_create(hashmap_t** map, hashmap_hash_function_t hash, hashmap_cmp_function_t cmp, uint64_t initial_size)
+ds_error_t map_create(map_t** map, map_hash_function_t hash, map_cmp_function_t cmp, uint64_t initial_size)
 {
     *map = malloc(sizeof(**map));
     if (*map == NULL) {
@@ -54,7 +54,7 @@ ds_error_t hashmap_create(hashmap_t** map, hashmap_hash_function_t hash, hashmap
     return SUCCESS;
 }
 
-ds_error_t hashmap_free(hashmap_t* map)
+ds_error_t map_free(map_t* map)
 {
     if (map == NULL) {
         return SUCCESS;
@@ -65,27 +65,27 @@ ds_error_t hashmap_free(hashmap_t* map)
     return SUCCESS;
 }
 
-static void stack_push_(hashmap_t* map, uint64_t i)
+static void stack_push_(map_t* map, uint64_t i)
 {
     map->buf[i].next = map->stack;
     map->stack = i;
 }
 
-static void stack_push_buf_(hashmap_t* map, uint64_t iter, uint64_t size)
+static void stack_push_buf_(map_t* map, uint64_t iter, uint64_t size)
 {
     for (; iter < size; iter++) {
         stack_push_(map, iter);
     }
 }
 
-static uint64_t stack_pop_(hashmap_t* map)
+static uint64_t stack_pop_(map_t* map)
 {
     uint64_t r = map->stack;
     map->stack = map->buf[map->stack].next;
     return r;
 }
 
-static uint64_t map_position_(hashmap_t* map, void* key)
+static uint64_t map_position_(map_t* map, void* key)
 {
     uint64_t i = map->hash(key) % map_size_(map);
     while (map->map[i] != -1 && !map->cmp(key, map->buf[map->map[i]].key)) {
@@ -94,7 +94,7 @@ static uint64_t map_position_(hashmap_t* map, void* key)
     return i;
 }
 
-static ds_error_t check_realloc_(hashmap_t* map)
+static ds_error_t check_realloc_(map_t* map)
 {
     if (map->stack != -1) {
         return SUCCESS;
@@ -124,7 +124,7 @@ static ds_error_t check_realloc_(hashmap_t* map)
     return SUCCESS;
 }
 
-ds_error_t hashmap_insert(hashmap_t* map, void* key, void* value)
+ds_error_t map_insert(map_t* map, void* key, void* value)
 {
     {
         ds_error_t err = check_realloc_(map);
@@ -146,7 +146,7 @@ ds_error_t hashmap_insert(hashmap_t* map, void* key, void* value)
 }
 
 // is NULL a valid value
-ds_error_t hashmap_get(hashmap_t* map, void* key, void** value)
+ds_error_t map_get(map_t* map, void* key, void** value)
 {
     uint64_t i = map_position_(map, key);
     if (map->map[i] == -1) {
@@ -157,7 +157,7 @@ ds_error_t hashmap_get(hashmap_t* map, void* key, void** value)
     return SUCCESS;
 }
 
-ds_error_t hashmap_delete(hashmap_t* map, void* key)
+ds_error_t map_delete(map_t* map, void* key)
 {
     uint64_t i = map_position_(map, key);
     uint64_t n = map->map[i];
