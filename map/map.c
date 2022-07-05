@@ -233,7 +233,7 @@ uint64_t map_simple_str_hash(void* key)
 
 }
 
-bool map_strcmp(void* a, void* b)
+bool map_strc_mp(void* a, void* b)
 {
     return strcmp((char*)a, (char*)b) == 0;
 }
