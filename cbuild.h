@@ -110,7 +110,7 @@ void compile_object(char* path, char* flags, char* obj)
     bool exists = file_exists(obj);
 
     if (!exists || last_mod_src > last_mod_obj) {
-        printf(GREEN "compiling: " RESET "%s -o %s -c %s\n", COMPILER, obj, path);
+        printf(GREEN "compiling: " RESET "%s -o %s -c %s %s\n", COMPILER, obj, path, flags);
         if (run_command(COMPILER, "-o", obj, "-c", path, flags) != 0) {
             exit(1);
         }

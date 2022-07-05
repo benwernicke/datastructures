@@ -258,7 +258,7 @@ bool map_str_cmp(void* a, void* b)
 bool map_contains(map_t* map, void* key)
 {
     uint64_t i = map_position_(map, key);
-    return i != -1;
+    return map->map[i] != -1;
 }
 
 uint64_t map_str_djb2(void* key)
