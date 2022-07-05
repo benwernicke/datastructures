@@ -208,19 +208,12 @@ void* map_iterator_value(map_t* map, map_iterator_t iter)
     return map->buf[iter].value;
 }
 
-map_iterator_t map_iterator_begin(map_t* map)
-{
-    return map->used_stack;
-}
-
 map_iterator_t map_iterator_next(map_t* map, map_iterator_t iter)
 {
+    if (iter == -1) {
+        return map->used_stack;
+    }
     return map->buf[iter].next;
-}
-
-map_iterator_t map_iterator_end(map_t* map)
-{
-    return -1;
 }
 
 uint64_t map_size(map_t* map)
@@ -230,7 +223,7 @@ uint64_t map_size(map_t* map)
 
 //--------------------------------------------------------------------------------------------------------------------------------
 
-uint64_t map_simple_str_hash(void* key)
+uint64_t map_str_hash(void* key)
 {
     char* s = key;
     uint64_t h = 86969;
@@ -239,6 +232,22 @@ uint64_t map_simple_str_hash(void* key)
         s++;
     }
     return h;
+}
+
+uint64_t map_str_jenkins(void* key)
+{
+    char* s = key;
+    uint64_t hash = 0;
+    char c;
+    while ((c = *s++)) {
+        hash += c;
+        hash += hash << 10;
+        hash ^= hash >> 6;
+    }
+    hash += hash << 3;
+    hash ^= hash >> 11;
+    hash += hash << 15;
+    return hash;
 }
 
 bool map_str_cmp(void* a, void* b)
@@ -250,4 +259,74 @@ bool map_contains(map_t* map, void* key)
 {
     uint64_t i = map_position_(map, key);
     return i != -1;
+}
+
+uint64_t map_str_djb2(void* key)
+{
+    char* s = key;
+    char c;
+    uint64_t hash = 5381;
+    while ((c = *s++)) {
+        hash = ((hash << 5) + hash) + c;
+    }
+    return hash;
+}
+
+bool map_i8_cmp(void* a, void* b)
+{
+    return *(int8_t*)a == *(int8_t*)b;
+}
+
+bool map_i16_cmp(void* a, void* b)
+{
+    return *(int16_t*)a == *(int16_t*)b;
+}
+
+bool map_i32_cmp(void* a, void* b)
+{
+    return *(int16_t*)a == *(int16_t*)b;
+}
+
+bool map_i64_cmp(void* a, void* b)
+{
+    return *(int64_t*)a == *(int64_t*)b;
+}
+
+bool map_u8_cmp(void* a, void* b)
+{
+    return *(uint8_t*)a == *(uint8_t*)b;
+}
+
+bool map_u16_cmp(void* a, void* b)
+{
+    return *(uint16_t*)a == *(uint16_t*)b;
+}
+
+bool map_u32_cmp(void* a, void* b)
+{
+    return *(uint16_t*)a == *(uint16_t*)b;
+}
+
+bool map_u64_cmp(void* a, void* b)
+{
+    return *(uint64_t*)a == *(uint64_t*)b;
+}
+
+uint64_t map_b64_self(void* key)
+{
+    return *(uint64_t*)key;
+}
+
+uint64_t map_b32_self(void* key)
+{
+    return *(uint32_t*)key;
+}
+
+uint64_t map_b16_self(void* key)
+{
+    return *(uint16_t*)key;
+}
+uint64_t map_b8_self(void* key)
+{
+    return *(uint8_t*)key;
 }

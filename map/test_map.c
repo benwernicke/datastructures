@@ -3,23 +3,10 @@
 
 #define NUM_TESTS 10000
 
-bool uint_cmp(uint64_t* a, uint64_t* b)
-{
-    if (a == NULL || b == NULL) {
-        return 0;
-    }
-    return *a == *b;
-}
-
-uint64_t uint_hash(uint64_t* key)
-{
-    return *key;
-}
-
 void test_delete(void)
 {
     map_t* map = NULL;
-    ds_error_t err = map_create(&map, (map_hash_function_t)uint_hash, (map_cmp_function_t)uint_cmp, 1);
+    ds_error_t err = map_create(&map, map_b64_self, map_u64_cmp, 1);
     if (err != SUCCESS) {
         fprintf(stderr, "error: create %s\n", __func__);
         exit(1);
@@ -65,7 +52,7 @@ void test_delete(void)
 void test_insert_get(void)
 {
     map_t* map = NULL;
-    ds_error_t err = map_create(&map, (map_hash_function_t)uint_hash, (map_cmp_function_t)uint_cmp, 1);
+    ds_error_t err = map_create(&map, map_b64_self, map_u64_cmp, 1);
     if (err != SUCCESS) {
         fprintf(stderr, "error: create %s\n", __func__);
         exit(1);
@@ -94,7 +81,6 @@ void test_insert_get(void)
 
     test_bool((char*)__func__, map_size(map) == NUM_TESTS);
 
-
     for (i = 0; i < NUM_TESTS; i++) {
         test_bool((char*)__func__, map_contains(map, &nums[i]));
         value = map_get(map, &nums[i]);
@@ -103,10 +89,9 @@ void test_insert_get(void)
     }
 
     uint64_t num_found = 0;
-    map_iterator_t iter = map_iterator_begin(map);
-    map_iterator_t end = map_iterator_end(map);
 
-    for (; iter != end; iter = map_iterator_next(map, iter)) {
+    map_iterator_t iter = MAP_ITERATOR_INIT;
+    while ((iter = map_iterator_next(map, iter)) != MAP_ITERATOR_END) {
         value = map_iterator_value(map, iter);
         for (i = 0; i < NUM_TESTS; i++) {
             if (nums[i] == *value) {
@@ -115,6 +100,7 @@ void test_insert_get(void)
             }
         }
     }
+
     test_bool((char*)__func__, num_found == NUM_TESTS);
 
     map_free(map);
