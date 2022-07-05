@@ -27,4 +27,9 @@ void* map_iterator_key(map_t* map, map_iterator_t iter);
 void* map_iterator_value(map_t* map, map_iterator_t iter);
 ds_error_t map_iterator_next(map_t* map, map_iterator_t* iter);
 
+// some hashfunctions
+
+uint64_t map_simple_str_hash(void* key);
+bool map_strcmp(void* a, void* b);
+
 #endif

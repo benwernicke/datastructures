@@ -219,3 +219,21 @@ ds_error_t map_iterator_end(map_t* map, map_iterator_t* end)
     *end = -1;
     return SUCCESS;
 }
+//--------------------------------------------------------------------------------------------------------------------------------
+
+uint64_t map_simple_str_hash(void* key)
+{
+    char* s = key;
+    uint64_t h = 86969;
+    while (*s) {
+        h = (h * 54059) ^ (s[0] * 76963);
+        s++;
+    }
+    return h;
+
+}
+
+bool map_strcmp(void* a, void* b)
+{
+    return strcmp((char*)a, (char*)b) == 0;
+}
