@@ -13,6 +13,7 @@ struct entry_t {
     void* value;
 
     uint64_t next;
+    uint64_t prev;
 };
 
 struct map_t {
@@ -70,8 +71,11 @@ ds_error_t map_free(map_t* map)
 
 static void stack_push_(map_t* map, uint64_t* stack, uint64_t i)
 {
+    map->buf[i].prev = -1;
+    if (*stack != -1) {
+        map->buf[*stack].prev = i;
+    }
     map->buf[i].next = *stack;
-    /*map->stack = i;*/
     *stack = i;
 }
 
@@ -86,7 +90,23 @@ static uint64_t stack_pop_(map_t* map, uint64_t* stack)
 {
     uint64_t r = *stack;
     *stack = map->buf[*stack].next;
+    if (*stack != -1) {
+        map->buf[*stack].prev = -1;
+    }
     return r;
+}
+
+static uint64_t stack_pop_position_(map_t* map, uint64_t* stack, uint64_t pos)
+{
+    uint64_t prev = map->buf[pos].prev;
+    uint64_t next = map->buf[pos].next;
+    if (next != -1) {
+        map->buf[next].prev = prev;
+    }
+    if (prev != -1) {
+        map->buf[prev].next = next;
+    }
+    return pos;
 }
 
 static uint64_t map_position_(map_t* map, void* key)
@@ -144,8 +164,8 @@ ds_error_t map_insert(map_t* map, void* key, void* value)
             return BAD_ALLOC;
         }
         map->map[i] = n;
+        map->buf[map->map[i]].key = key;
     }
-    map->buf[map->map[i]].key = key;
     map->buf[map->map[i]].value = value;
     return SUCCESS;
 }
@@ -167,37 +187,20 @@ ds_error_t map_delete(map_t* map, void* key)
     uint64_t i = map_position_(map, key);
     uint64_t n = map->map[i];
     if (n != -1) {
+        stack_pop_position_(map, &map->used_stack, n);
         stack_push_(map, &map->unused_stack, n);
         map->map[i] = -1;
-    }
-
-    {
-        map_iterator_t prev = -1;
-        map_iterator_t iter;
-        map_iterator_t end;
-        map_iterator_begin(map, &iter);
-        map_iterator_end(map, &end);
-        for (; iter != end; map_iterator_next(map, &iter)) {
-            if (iter == i) {
-                if (prev == -1) {
-                    stack_pop_(map, &map->used_stack);
-                } else {
-                    map->buf[prev].next = map->buf[iter].next;
-                }
-            }
-            prev = iter;
-        }
     }
 
     return SUCCESS;
 }
 
-void* map_iterator_key(map_t* map, map_iterator_t iter)
+inline void* map_iterator_key(map_t* map, map_iterator_t iter)
 {
     return map->buf[iter].key;
 }
 
-void* map_iterator_value(map_t* map, map_iterator_t iter)
+inline void* map_iterator_value(map_t* map, map_iterator_t iter)
 {
     return map->buf[iter].value;
 }
@@ -230,10 +233,9 @@ uint64_t map_simple_str_hash(void* key)
         s++;
     }
     return h;
-
 }
 
-bool map_strc_mp(void* a, void* b)
+bool map_str_cmp(void* a, void* b)
 {
     return strcmp((char*)a, (char*)b) == 0;
 }
