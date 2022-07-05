@@ -11,12 +11,12 @@ void compile_vector()
     compile_object_directory("vector/main", FLAGS, "vector/build/");
 }
 
-void compile_hashmap()
+void compile_map()
 {
-    compile_object("hashmap/hashmap.c", FLAGS, "hashmap/build/hashmap.o");
-    compile_object("test/test.c", FLAGS, "hashmap/build/test.o");
-    compile_object("hashmap/test_hashmap.c", FLAGS, "hashmap/build/test_hashmap.o");
-    compile_object_directory("hashmap/main", FLAGS, "hashmap/build/");
+    compile_object("map/map.c", FLAGS, "map/build/map.o");
+    compile_object("test/test.c", FLAGS, "map/build/test.o");
+    compile_object("map/test_map.c", FLAGS, "map/build/test_map.o");
+    compile_object_directory("map/main", FLAGS, "map/build/");
 }
 
 void compile_path()
@@ -36,12 +36,12 @@ void clean()
     printf("rm ./vector/log.log*\n");
     system("rm ./vector/log.log*");
 
-    printf("rm ./hashset/build/*\n");
-    system("rm ./hashset/build/*");
-    printf("rm ./hashset/main\n");
-    system("rm ./hashset/main");
-    printf("rm ./hashset/log.log*\n");
-    system("rm ./hashset/log.log*");
+    printf("rm ./set/build/*\n");
+    system("rm ./set/build/*");
+    printf("rm ./set/main\n");
+    system("rm ./set/main");
+    printf("rm ./set/log.log*\n");
+    system("rm ./set/log.log*");
 
     printf("rm ./buffer/build/*\n");
     system("rm ./buffer/build/*");
@@ -50,12 +50,12 @@ void clean()
     printf("rm ./buffer/log.log*\n");
     system("rm ./buffer/log.log*");
 
-    printf("rm ./hashmap/build/*\n");
-    system("rm ./hashmap/build/*");
-    printf("rm ./hashmap/main\n");
-    system("rm ./hashmap/main");
-    printf("rm ./hashmap/log.log*\n");
-    system("rm ./hashmap/log.log*");
+    printf("rm ./map/build/*\n");
+    system("rm ./map/build/*");
+    printf("rm ./map/main\n");
+    system("rm ./map/main");
+    printf("rm ./map/log.log*\n");
+    system("rm ./map/log.log*");
 
     printf("rm ./path/build/*\n");
     system("rm ./path/build/*");
@@ -73,34 +73,33 @@ void compile_buffer()
     compile_object_directory("buffer/main", FLAGS, "buffer/build/");
 }
 
-void compile_hashset()
+void compile_set()
 {
-    compile_object("hashset/hashset.c", FLAGS, "hashset/build/hashset.o");
-    compile_object("test/test.c", FLAGS, "hashset/build/test.o");
-    compile_object("hashset/test_hashset.c", FLAGS, "hashset/build/test_hashset.o");
-    compile_object_directory("hashset/main", FLAGS, "hashset/build/");
+    compile_object("set/set.c", FLAGS, "set/build/set.o");
+    compile_object("test/test.c", FLAGS, "set/build/test.o");
+    compile_object("set/test_set.c", FLAGS, "set/build/test_set.o");
+    compile_object_directory("set/main", FLAGS, "set/build/");
 }
 
 void valgrind()
 {
     system("valgrind --show-leak-kinds=all --log-file=buffer/log.log --leak-check=full buffer/main");
     system("valgrind --show-leak-kinds=all --log-file=vector/log.log --leak-check=full vector/main");
-    system("valgrind --show-leak-kinds=all --log-file=hashset/log.log --leak-check=full hashset/main");
+    system("valgrind --show-leak-kinds=all --log-file=set/log.log --leak-check=full set/main");
     system("valgrind --show-leak-kinds=all --log-file=path/log.log --leak-check=full path/main");
-    system("valgrind --show-leak-kinds=all --log-file=hashmap/log.log --leak-check=full hashmap/main");
+    system("valgrind --show-leak-kinds=all --log-file=map/log.log --leak-check=full map/main");
 }
 
 void compile_all()
 {
-    compile_hashset();
-    compile_hashset();
+    compile_set();
     compile_vector();
     compile_buffer();
     compile_path();
     compile_vector();
     compile_buffer();
     compile_path();
-    compile_hashmap();
+    compile_map();
 }
 
 int main(int argc, char** argv)
@@ -112,9 +111,9 @@ int main(int argc, char** argv)
         if (strcmp(argv[1], "vector") == 0) {
             compile_vector();
             system("vector/main");
-        } else if (strcmp(argv[1], "hashset") == 0) {
-            compile_hashset();
-            system("hashset/main");
+        } else if (strcmp(argv[1], "set") == 0) {
+            compile_set();
+            system("set/main");
         } else if (strcmp(argv[1], "clean") == 0) {
             clean();
         } else if (strcmp(argv[1], "buffer") == 0) {
@@ -127,9 +126,9 @@ int main(int argc, char** argv)
         } else if (strcmp(argv[1], "path") == 0) {
             compile_path();
             system("path/main");
-        } else if (strcmp(argv[1], "hashmap") == 0) {
-            compile_hashmap();
-            system("hashmap/main");
+        } else if (strcmp(argv[1], "map") == 0) {
+            compile_map();
+            system("map/main");
         } else {
             fprintf(stderr, "unknown option: %s\n", argv[1]);
         }
