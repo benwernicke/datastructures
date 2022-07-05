@@ -194,12 +194,12 @@ ds_error_t map_delete(map_t* map, void* key)
 
 void* map_iterator_key(map_t* map, map_iterator_t iter)
 {
-    return map->buf[map->map[iter]].key;
+    return map->buf[iter].key;
 }
 
 void* map_iterator_value(map_t* map, map_iterator_t iter)
 {
-    return map->buf[map->map[iter]].value;
+    return map->buf[iter].value;
 }
 
 ds_error_t map_iterator_begin(map_t* map, map_iterator_t* iter)
