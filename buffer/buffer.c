@@ -31,24 +31,18 @@ ds_error_t buffer_create_from_range(buffer_t** b, uint64_t initial_size, uint64_
     return SUCCESS;
 }
 
-ds_error_t buffer_get(buffer_t* b, uint64_t index, void** ret)
+void* buffer_get(buffer_t* b, uint64_t index)
 {
-    if (index >= b->used) {
-        *ret = NULL;
-        return INDEX_OUT_OF_BOUND;
-    }
-    *ret = b->buf + index * b->member_size;
-    return SUCCESS;
+    return b->buf + index * b->member_size;
 }
 
-ds_error_t buffer_free(buffer_t* b)
+void buffer_free(buffer_t* b)
 {
     if (b == NULL) {
-        return SUCCESS;
+        return;
     }
     free(b->buf);
     free(b);
-    return SUCCESS;
 }
 
 ds_error_t buffer_more(buffer_t* b, void** ret)
@@ -82,39 +76,28 @@ ds_error_t buffer_remove(buffer_t* b, uint64_t index)
     return SUCCESS;
 }
 
-ds_error_t buffer_index_from_ptr(buffer_t* b, void* ptr, uint64_t* index)
+uint64_t buffer_index_from_ptr(buffer_t* b, void* ptr)
 {
-    *index = (uint64_t)((uint8_t*)ptr - b->buf) / b->member_size;
-    if (*index >= b->used) {
-        return INDEX_OUT_OF_BOUND;
-    }
-    return SUCCESS;
+    return (uint64_t)((uint8_t*)ptr - b->buf) / b->member_size;
 }
 
 ds_error_t buffer_remove_ptr(buffer_t* b, void* ptr)
 {
-    uint64_t index = 0;
-    ds_error_t err = buffer_index_from_ptr(b, ptr, &index);
-    if (err != SUCCESS) {
-        return err;
-    }
+    uint64_t index = buffer_index_from_ptr(b, ptr);
     return buffer_remove(b, index);
 }
 
-ds_error_t buffer_begin(buffer_t* b, void** begin)
+void* buffer_begin(buffer_t* b)
 {
-    *begin = b->buf;
-    return SUCCESS;
+    return b->buf;
 }
 
-ds_error_t buffer_end(buffer_t* b, void** end)
+void* buffer_end(buffer_t* b)
 {
-    *end = b->buf + b->used * b->member_size;
-    return SUCCESS;
+    return b->buf + b->used * b->member_size;
 }
 
-ds_error_t buffer_size(buffer_t* b, uint64_t* size)
+uint64_t buffer_size(buffer_t* b)
 {
-    *size = b->used;
-    return SUCCESS;
+    return b->used;
 }

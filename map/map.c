@@ -26,6 +26,8 @@ struct map_t {
 
     map_hash_function_t hash;
     map_cmp_function_t cmp;
+
+    uint64_t size;
 };
 
 static uint64_t map_size_(map_t* map)
@@ -42,6 +44,7 @@ ds_error_t map_create(map_t** map, map_hash_function_t hash, map_cmp_function_t 
     (*map)->buf_allocated = initial_size;
     (*map)->unused_stack = -1;
     (*map)->used_stack = -1;
+    (*map)->size = 0;
     (*map)->hash = hash;
     (*map)->cmp = cmp;
 
@@ -58,15 +61,14 @@ ds_error_t map_create(map_t** map, map_hash_function_t hash, map_cmp_function_t 
     return SUCCESS;
 }
 
-ds_error_t map_free(map_t* map)
+void map_free(map_t* map)
 {
     if (map == NULL) {
-        return SUCCESS;
+        return;
     }
     free(map->buf);
     free(map->map);
     free(map);
-    return SUCCESS;
 }
 
 static void stack_push_(map_t* map, uint64_t* stack, uint64_t i)
@@ -165,24 +167,26 @@ ds_error_t map_insert(map_t* map, void* key, void* value)
         }
         map->map[i] = n;
         map->buf[map->map[i]].key = key;
+        map->size++;
     }
     map->buf[map->map[i]].value = value;
     return SUCCESS;
 }
 
 // is NULL a valid value
-ds_error_t map_get(map_t* map, void* key, void** value)
+void* map_get(map_t* map, void* key)
 {
+    void* value = NULL;
     uint64_t i = map_position_(map, key);
     if (map->map[i] == -1) {
-        *value = NULL;
+        value = NULL;
     } else {
-        *value = map->buf[map->map[i]].value;
+        value = map->buf[map->map[i]].value;
     }
-    return SUCCESS;
+    return value;
 }
 
-ds_error_t map_delete(map_t* map, void* key)
+void map_delete(map_t* map, void* key)
 {
     uint64_t i = map_position_(map, key);
     uint64_t n = map->map[i];
@@ -190,38 +194,40 @@ ds_error_t map_delete(map_t* map, void* key)
         stack_pop_position_(map, &map->used_stack, n);
         stack_push_(map, &map->unused_stack, n);
         map->map[i] = -1;
+        map->size--;
     }
-
-    return SUCCESS;
 }
 
-inline void* map_iterator_key(map_t* map, map_iterator_t iter)
+void* map_iterator_key(map_t* map, map_iterator_t iter)
 {
     return map->buf[iter].key;
 }
 
-inline void* map_iterator_value(map_t* map, map_iterator_t iter)
+void* map_iterator_value(map_t* map, map_iterator_t iter)
 {
     return map->buf[iter].value;
 }
 
-ds_error_t map_iterator_begin(map_t* map, map_iterator_t* iter)
+map_iterator_t map_iterator_begin(map_t* map)
 {
-    *iter = map->used_stack;
-    return SUCCESS;
+    return map->used_stack;
 }
 
-ds_error_t map_iterator_next(map_t* map, map_iterator_t* iter)
+map_iterator_t map_iterator_next(map_t* map, map_iterator_t iter)
 {
-    *iter = map->buf[*iter].next;
-    return SUCCESS;
+    return map->buf[iter].next;
 }
 
-ds_error_t map_iterator_end(map_t* map, map_iterator_t* end)
+map_iterator_t map_iterator_end(map_t* map)
 {
-    *end = -1;
-    return SUCCESS;
+    return -1;
 }
+
+uint64_t map_size(map_t* map)
+{
+    return map->size;
+}
+
 //--------------------------------------------------------------------------------------------------------------------------------
 
 uint64_t map_simple_str_hash(void* key)
@@ -238,4 +244,10 @@ uint64_t map_simple_str_hash(void* key)
 bool map_str_cmp(void* a, void* b)
 {
     return strcmp((char*)a, (char*)b) == 0;
+}
+
+bool map_contains(map_t* map, void* key)
+{
+    uint64_t i = map_position_(map, key);
+    return i != -1;
 }

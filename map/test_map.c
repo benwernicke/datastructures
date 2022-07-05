@@ -1,7 +1,7 @@
 #include "../test/test.h"
 #include "map.h"
 
-#define NUM_TESTS 10
+#define NUM_TESTS 10000
 
 bool uint_cmp(uint64_t* a, uint64_t* b)
 {
@@ -34,7 +34,7 @@ void test_delete(void)
     uint64_t* value;
 
     for (i = 0; i < NUM_TESTS; i++) {
-        map_get(map, &nums[i], (void**)&value);
+        value = map_get(map, &nums[i]);
         test_bool((char*)__func__, value == NULL);
     }
 
@@ -52,7 +52,7 @@ void test_delete(void)
         }
     }
     for (i = 0; i < NUM_TESTS; i++) {
-        map_get(map, &nums[i], (void**)&value);
+        value = map_get(map, &nums[i]);
         if (i % 2 == 0) {
             test_bool((char*)__func__, value == NULL);
         } else {
@@ -80,7 +80,7 @@ void test_insert_get(void)
     uint64_t* value;
 
     for (i = 0; i < NUM_TESTS; i++) {
-        map_get(map, &nums[i], (void**)&value);
+        value = map_get(map, &nums[i]);
         test_bool((char*)__func__, value == NULL);
     }
 
@@ -92,18 +92,21 @@ void test_insert_get(void)
         }
     }
 
+    test_bool((char*)__func__, map_size(map) == NUM_TESTS);
+
+
     for (i = 0; i < NUM_TESTS; i++) {
-        map_get(map, &nums[i], (void**)&value);
+        test_bool((char*)__func__, map_contains(map, &nums[i]));
+        value = map_get(map, &nums[i]);
         test_bool((char*)__func__, value != NULL);
         test_bool((char*)__func__, value == &nums[i]);
     }
 
     uint64_t num_found = 0;
-    map_iterator_t iter;
-    map_iterator_t end;
-    map_iterator_begin(map, &iter);
-    map_iterator_end(map, &end);
-    for (; iter != end; map_iterator_next(map, &iter)) {
+    map_iterator_t iter = map_iterator_begin(map);
+    map_iterator_t end = map_iterator_end(map);
+
+    for (; iter != end; iter = map_iterator_next(map, iter)) {
         value = map_iterator_value(map, iter);
         for (i = 0; i < NUM_TESTS; i++) {
             if (nums[i] == *value) {
