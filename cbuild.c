@@ -3,6 +3,13 @@
 
 #define FLAGS "-g -Wall -pedantic"
 
+void compile_sv()
+{
+    compile_object("sv/sv.c", FLAGS, "sv/build/sv.o");
+    compile_object("sv/test_sv.c", FLAGS, "sv/build/test_sv.o");
+    compile_object_directory("sv/main", FLAGS, "sv/build/");
+}
+
 void compile_vector()
 {
     compile_object("vector/vector.c", FLAGS, "vector/build/vector.o");
@@ -24,42 +31,22 @@ void compile_path()
     compile_object_directory("path/main", FLAGS, "path/build/");
 }
 
+#define clean_one(dir)                 \
+    printf("rm ./" dir "/build/*\n");  \
+    system("rm ./" dir "/build/*");    \
+    printf("rm ./" dir "/main\n");     \
+    system("rm ./" dir "/main");       \
+    printf("rm ./" dir "/log.log*\n"); \
+    system("rm ./" dir "/log.log*");
+
 void clean()
 {
-    printf("rm ./vector/build/*\n");
-    system("rm ./vector/build/*");
-    printf("rm ./vector/main\n");
-    system("rm ./vector/main");
-    printf("rm ./vector/log.log*\n");
-    system("rm ./vector/log.log*");
-
-    printf("rm ./set/build/*\n");
-    system("rm ./set/build/*");
-    printf("rm ./set/main\n");
-    system("rm ./set/main");
-    printf("rm ./set/log.log*\n");
-    system("rm ./set/log.log*");
-
-    printf("rm ./buffer/build/*\n");
-    system("rm ./buffer/build/*");
-    printf("rm ./buffer/main\n");
-    system("rm ./buffer/main");
-    printf("rm ./buffer/log.log*\n");
-    system("rm ./buffer/log.log*");
-
-    printf("rm ./map/build/*\n");
-    system("rm ./map/build/*");
-    printf("rm ./map/main\n");
-    system("rm ./map/main");
-    printf("rm ./map/log.log*\n");
-    system("rm ./map/log.log*");
-
-    printf("rm ./path/build/*\n");
-    system("rm ./path/build/*");
-    printf("rm ./path/main\n");
-    system("rm ./path/main");
-    printf("rm ./path/log.log*\n");
-    system("rm ./path/log.log*");
+    clean_one("vector");
+    clean_one("map");
+    clean_one("set");
+    clean_one("buffer");
+    clean_one("path");
+    clean_one("sv");
 
     printf("rm log.log\n");
     system("rm log.log");
@@ -70,13 +57,6 @@ void compile_buffer()
     compile_object("buffer/buffer.c", FLAGS, "buffer/build/buffer.o");
     compile_object("buffer/test_buffer.c", FLAGS, "buffer/build/test_buffer.o");
     compile_object_directory("buffer/main", FLAGS, "buffer/build/");
-}
-
-void compile_algorithm()
-{
-    compile_object("algorithm/algorithm.c", FLAGS, "algorithm/build/algorithm.o");
-    compile_object("algorithm/test_algorithm.c", FLAGS, "algorithm/build/test_algorithm.o");
-    compile_object_directory("algorithm/main", FLAGS, "algorithm/build/");
 }
 
 void compile_set()
@@ -93,6 +73,7 @@ void valgrind()
     system("valgrind --show-leak-kinds=all --log-file=set/log.log --leak-check=full set/main");
     system("valgrind --show-leak-kinds=all --log-file=path/log.log --leak-check=full path/main");
     system("valgrind --show-leak-kinds=all --log-file=map/log.log --leak-check=full map/main");
+    system("valgrind --show-leak-kinds=all --log-file=sv/log.log --leak-check=full sv/main");
 
     printf("catting logs\n");
     system("touch log.log");
@@ -117,6 +98,9 @@ void valgrind()
     system("cat path/log.log >> log.log");
     system("rm path/log.log*");
 
+    system("echo ---SV--- >> log.log");
+    system("cat sv/log.log >> log.log");
+    system("rm sv/log.log*");
 }
 
 void compile_all()
@@ -129,7 +113,7 @@ void compile_all()
     compile_buffer();
     compile_path();
     compile_map();
-    compile_algorithm();
+    compile_sv();
 }
 
 int main(int argc, char** argv)
@@ -159,9 +143,9 @@ int main(int argc, char** argv)
         } else if (strcmp(argv[1], "map") == 0) {
             compile_map();
             system("map/main");
-        } else if (strcmp(argv[1], "algorithm") == 0) {
-            compile_algorithm();
-            system("algorithm/main");
+        } else if (strcmp(argv[1], "sv") == 0) {
+            compile_sv();
+            system("sv/main");
         } else {
             fprintf(stderr, "unknown option: %s\n", argv[1]);
         }
