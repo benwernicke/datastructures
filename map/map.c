@@ -1,6 +1,6 @@
 #include "map.h"
 
-static ds_error_t check_realloc_(map_t* map);
+static int check_realloc_(map_t* map);
 static uint64_t map_position_(map_t* map, void* key);
 static uint64_t stack_pop_(map_t* map, uint64_t* stack);
 static void stack_push_buf_(map_t* map, uint64_t* stack, uint64_t iter, uint64_t size);
@@ -35,30 +35,30 @@ static uint64_t map_size_(map_t* map)
     return map->buf_allocated << 2;
 }
 
-ds_error_t map_create(map_t** map, map_hash_function_t hash, map_cmp_function_t cmp, uint64_t initial_size)
+map_t* map_create(map_hash_function_t hash, map_cmp_function_t cmp, uint64_t initial_size)
 {
-    *map = malloc(sizeof(**map));
-    if (*map == NULL) {
-        return BAD_ALLOC;
+    map_t* map = malloc(sizeof(*map));
+    if (map == NULL) {
+        return NULL;
     }
-    (*map)->buf_allocated = initial_size;
-    (*map)->unused_stack = -1;
-    (*map)->used_stack = -1;
-    (*map)->size = 0;
-    (*map)->hash = hash;
-    (*map)->cmp = cmp;
+    map->buf_allocated = initial_size;
+    map->unused_stack = -1;
+    map->used_stack = -1;
+    map->size = 0;
+    map->hash = hash;
+    map->cmp = cmp;
 
-    (*map)->buf = malloc(initial_size * sizeof(*(*map)->buf));
-    (*map)->map = malloc(map_size_(*map) * sizeof(*(*map)->map));
-    memset((*map)->map, 0xFF, map_size_(*map) * sizeof(*(*map)->map));
-    if ((*map)->buf == NULL || (*map)->map == NULL) {
-        free((*map)->buf);
-        free((*map)->map);
-        free(*map);
-        return BAD_ALLOC;
+    map->buf = malloc(initial_size * sizeof(*map->buf));
+    map->map = malloc(map_size_(map) * sizeof(*map->map));
+    memset(map->map, 0xFF, map_size_(map) * sizeof(*map->map));
+    if (map->buf == NULL || map->map == NULL) {
+        free(map->buf);
+        free(map->map);
+        free(map);
+        return NULL;
     }
-    stack_push_buf_(*map, &(*map)->unused_stack, 0, (*map)->buf_allocated);
-    return SUCCESS;
+    stack_push_buf_(map, &map->unused_stack, 0, map->buf_allocated);
+    return map;
 }
 
 void map_free(map_t* map)
@@ -120,10 +120,10 @@ static uint64_t map_position_(map_t* map, void* key)
     return i;
 }
 
-static ds_error_t check_realloc_(map_t* map)
+static int check_realloc_(map_t* map)
 {
     if (map->unused_stack != -1) {
-        return SUCCESS;
+        return 0;
     }
 
     uint64_t old_allocated = map->buf_allocated;
@@ -135,7 +135,7 @@ static ds_error_t check_realloc_(map_t* map)
         map->buf_allocated = old_allocated;
         free(new_buf);
         free(new_map);
-        return BAD_ALLOC;
+        return -1;
     }
 
     map->buf = new_buf;
@@ -147,14 +147,14 @@ static ds_error_t check_realloc_(map_t* map)
     for (i = 0; i < old_allocated; i++) {
         map->map[map_position_(map, map->buf[i].key)] = i;
     }
-    return SUCCESS;
+    return 0;
 }
 
-ds_error_t map_insert(map_t* map, void* key, void* value)
+int map_insert(map_t* map, void* key, void* value)
 {
     {
-        ds_error_t err = check_realloc_(map);
-        if (err != SUCCESS) {
+        int err = check_realloc_(map);
+        if (err != 0) {
             return err;
         }
     }
@@ -163,14 +163,14 @@ ds_error_t map_insert(map_t* map, void* key, void* value)
         uint64_t n = stack_pop_(map, &map->unused_stack);
         stack_push_(map, &map->used_stack, n);
         if (n == -1) {
-            return BAD_ALLOC;
+            return -1;
         }
         map->map[i] = n;
         map->buf[map->map[i]].key = key;
         map->size++;
     }
     map->buf[map->map[i]].value = value;
-    return SUCCESS;
+    return 0;
 }
 
 // is NULL a valid value

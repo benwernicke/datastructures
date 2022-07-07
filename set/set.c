@@ -1,6 +1,6 @@
 #include "set.h"
 
-static ds_error_t check_realloc_(set_t* set);
+static int check_realloc_(set_t* set);
 static uint64_t set_position_(set_t* set, void* key);
 static uint64_t stack_pop_(set_t* set, uint64_t* stack);
 static void stack_push_buf_(set_t* set, uint64_t* stack, uint64_t iter, uint64_t size);
@@ -34,30 +34,30 @@ static uint64_t set_size_(set_t* set)
     return set->buf_allocated << 2;
 }
 
-ds_error_t set_create(set_t** set, set_hash_function_t hash, set_cmp_function_t cmp, uint64_t initial_size)
+set_t* set_create(set_hash_function_t hash, set_cmp_function_t cmp, uint64_t initial_size)
 {
-    *set = malloc(sizeof(**set));
-    if (*set == NULL) {
-        return BAD_ALLOC;
+    set_t* set = malloc(sizeof(*set));
+    if (set == NULL) {
+        return NULL;
     }
-    (*set)->buf_allocated = initial_size;
-    (*set)->unused_stack = -1;
-    (*set)->used_stack = -1;
-    (*set)->size = 0;
-    (*set)->hash = hash;
-    (*set)->cmp = cmp;
+    set->buf_allocated = initial_size;
+    set->unused_stack = -1;
+    set->used_stack = -1;
+    set->size = 0;
+    set->hash = hash;
+    set->cmp = cmp;
 
-    (*set)->buf = malloc(initial_size * sizeof(*(*set)->buf));
-    (*set)->set= malloc(set_size_(*set) * sizeof(*(*set)->set));
-    memset((*set)->set, 0xFF, set_size_(*set) * sizeof(*(*set)->set));
-    if ((*set)->buf == NULL || (*set)->set == NULL) {
-        free((*set)->buf);
-        free((*set)->set);
-        free(*set);
-        return BAD_ALLOC;
+    set->buf = malloc(initial_size * sizeof(*set->buf));
+    set->set= malloc(set_size_(set) * sizeof(*set->set));
+    memset(set->set, 0xFF, set_size_(set) * sizeof(*set->set));
+    if (set->buf == NULL || set->set == NULL) {
+        free(set->buf);
+        free(set->set);
+        free(set);
+        return NULL;
     }
-    stack_push_buf_(*set, &(*set)->unused_stack, 0, (*set)->buf_allocated);
-    return SUCCESS;
+    stack_push_buf_(set, &set->unused_stack, 0, set->buf_allocated);
+    return set;
 }
 
 void set_free(set_t* set)
@@ -119,10 +119,10 @@ static uint64_t set_position_(set_t* set, void* key)
     return i;
 }
 
-static ds_error_t check_realloc_(set_t* set)
+static int check_realloc_(set_t* set)
 {
     if (set->unused_stack != -1) {
-        return SUCCESS;
+        return 0;
     }
 
     uint64_t old_allocated = set->buf_allocated;
@@ -134,7 +134,7 @@ static ds_error_t check_realloc_(set_t* set)
         set->buf_allocated = old_allocated;
         free(new_buf);
         free(new_set);
-        return BAD_ALLOC;
+        return -1;
     }
 
     set->buf = new_buf;
@@ -146,14 +146,14 @@ static ds_error_t check_realloc_(set_t* set)
     for (i = 0; i < old_allocated; i++) {
         set->set[set_position_(set, set->buf[i].key)] = i;
     }
-    return SUCCESS;
+    return 0;
 }
 
-ds_error_t set_insert(set_t* set, void* key)
+int set_insert(set_t* set, void* key)
 {
     {
-        ds_error_t err = check_realloc_(set);
-        if (err != SUCCESS) {
+        int err = check_realloc_(set);
+        if (err != 0) {
             return err;
         }
     }
@@ -162,13 +162,13 @@ ds_error_t set_insert(set_t* set, void* key)
         uint64_t n = stack_pop_(set, &set->unused_stack);
         stack_push_(set, &set->used_stack, n);
         if (n == -1) {
-            return BAD_ALLOC;
+            return -1;
         }
         set->set[i] = n;
         set->buf[set->set[i]].key = key;
         set->size++;
     }
-    return SUCCESS;
+    return 0;
 }
 
 void set_delete(set_t* set, void* key)

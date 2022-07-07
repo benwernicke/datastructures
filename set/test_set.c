@@ -5,13 +5,12 @@
 
 void test_delete(void)
 {
-    set_t* set;
-    set_create(&set, set_b64_self, set_u64_cmp, 10);
+    set_t* set = set_create(set_b64_self, set_u64_cmp, 10);
     uint64_t nums[NUM_TESTS];
     uint64_t i;
     for (i = 0; i < NUM_TESTS; i++) {
         nums[i] = i;
-        if (set_insert(set, &nums[i]) != SUCCESS) {
+        if (set_insert(set, &nums[i]) != 0) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
     }
@@ -25,9 +24,9 @@ void test_delete(void)
     for (i = 0; i < NUM_TESTS; i++) {
         b = set_contains(set, &nums[i]);
         if (i % 2 == 0) {
-            test_bool((char*)__func__, !b);
+            test(!b);
         } else {
-            test_bool((char*)__func__, b);
+            test(b);
         }
     }
     set_free(set);
@@ -35,8 +34,7 @@ void test_delete(void)
 
 void test_get_set()
 {
-    set_t* set;
-    set_create(&set, set_b64_self, set_u64_cmp, 10);
+    set_t* set = set_create(set_b64_self, set_u64_cmp, 10);
     srand(69);
     uint64_t i;
     uint64_t nums[NUM_TESTS];
@@ -44,22 +42,21 @@ void test_get_set()
         nums[i] = rand();
     }
     for (i = 0; i < NUM_TESTS; i++) {
-        if (set_insert(set, &nums[i]) != SUCCESS) {
+        if (set_insert(set, &nums[i]) != 0) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
     }
     bool b;
     for (i = 0; i < NUM_TESTS; i++) {
         b = set_contains(set, &nums[i]);
-        test_bool((char*)__func__, b);
+        test( b);
     }
     set_free(set);
 }
 
 void test_get_keys_size()
 {
-    set_t* set;
-    set_create(&set, set_b64_self, set_u64_cmp, 10);
+    set_t* set = set_create(set_b64_self, set_u64_cmp, 10);
     srand(69);
     uint64_t i;
     uint64_t nums[NUM_TESTS];
@@ -67,13 +64,13 @@ void test_get_keys_size()
         nums[i] = rand();
     }
     for (i = 0; i < NUM_TESTS; i++) {
-        if (set_insert(set, &nums[i]) != SUCCESS) {
+        if (set_insert(set, &nums[i]) != 0) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
     }
     uint64_t size = set_size(set);
 
-    test_bool((char*)__func__, size == NUM_TESTS);
+    test(size == NUM_TESTS);
 
     set_iterator_t iter = SET_ITERATOR_INIT;
     uint64_t found = 0;
@@ -85,7 +82,7 @@ void test_get_keys_size()
             }
         }
     }
-    test_bool((char*)__func__, found == NUM_TESTS);
+    test(found == NUM_TESTS);
 
     set_free(set);
 }
@@ -95,6 +92,5 @@ int main(void)
     test_get_set();
     test_delete();
     test_get_keys_size();
-    test_total();
     return 0;
 }

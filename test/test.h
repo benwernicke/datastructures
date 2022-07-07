@@ -1,14 +1,17 @@
 #ifndef TEST_H
 #define TEST_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <assert.h>
+#include <stdarg.h>
 #include <stdio.h>
 
+#define test_(cond, desc) \
+    assert(cond);         \
+    printf(__func__);     \
+    printf(" ");          \
+    printf(desc);         \
+    printf(": \033[32\t\t\tmsuccess\033[39m\n");
 
-void test_int_eq(char* desc, int64_t a, int64_t b);
-void test_uint_eq(char* desc, uint64_t a, uint64_t b);
-void test_total();
-void test_bool(char* desc, bool b);
+#define test(cond, ...) test_(cond, #cond)
 
 #endif

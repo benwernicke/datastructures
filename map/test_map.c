@@ -5,9 +5,8 @@
 
 void test_delete(void)
 {
-    map_t* map = NULL;
-    ds_error_t err = map_create(&map, map_b64_self, map_u64_cmp, 1);
-    if (err != SUCCESS) {
+    map_t* map = map_create(map_b64_self, map_u64_cmp, 1);
+    if (map == NULL) {
         fprintf(stderr, "error: create %s\n", __func__);
         exit(1);
     }
@@ -22,12 +21,13 @@ void test_delete(void)
 
     for (i = 0; i < NUM_TESTS; i++) {
         value = map_get(map, &nums[i]);
-        test_bool((char*)__func__, value == NULL);
+        test(value == NULL);
     }
 
+    int err;
     for (i = 0; i < NUM_TESTS; i++) {
         err = map_insert(map, &nums[i], &nums[i]);
-        if (err != SUCCESS) {
+        if (err != 0) {
             fprintf(stderr, "error: create %s\n", __func__);
             exit(1);
         }
@@ -41,9 +41,9 @@ void test_delete(void)
     for (i = 0; i < NUM_TESTS; i++) {
         value = map_get(map, &nums[i]);
         if (i % 2 == 0) {
-            test_bool((char*)__func__, value == NULL);
+            test(value == NULL);
         } else {
-            test_bool((char*)__func__, value == &nums[i]);
+            test(value == &nums[i]);
         }
     }
     map_free(map);
@@ -51,9 +51,8 @@ void test_delete(void)
 
 void test_insert_get(void)
 {
-    map_t* map = NULL;
-    ds_error_t err = map_create(&map, map_b64_self, map_u64_cmp, 1);
-    if (err != SUCCESS) {
+    map_t* map = map_create(map_b64_self, map_u64_cmp, 1);
+    if (map == NULL) {
         fprintf(stderr, "error: create %s\n", __func__);
         exit(1);
     }
@@ -68,24 +67,26 @@ void test_insert_get(void)
 
     for (i = 0; i < NUM_TESTS; i++) {
         value = map_get(map, &nums[i]);
-        test_bool((char*)__func__, value == NULL);
+        test(value == NULL);
     }
 
+    int err;
     for (i = 0; i < NUM_TESTS; i++) {
         err = map_insert(map, &nums[i], &nums[i]);
-        if (err != SUCCESS) {
+        if (err != 0) {
             fprintf(stderr, "error: create %s\n", __func__);
             exit(1);
         }
     }
 
-    test_bool((char*)__func__, map_size(map) == NUM_TESTS);
+    test(map_size(map) == NUM_TESTS);
+    
 
     for (i = 0; i < NUM_TESTS; i++) {
-        test_bool((char*)__func__, map_contains(map, &nums[i]));
+        test(map_contains(map, &nums[i]));
         value = map_get(map, &nums[i]);
-        test_bool((char*)__func__, value != NULL);
-        test_bool((char*)__func__, value == &nums[i]);
+        test( value != NULL);
+        test(value == &nums[i]);
     }
 
     uint64_t num_found = 0;
@@ -101,7 +102,7 @@ void test_insert_get(void)
         }
     }
 
-    test_bool((char*)__func__, num_found == NUM_TESTS);
+    test(num_found == NUM_TESTS);
 
     map_free(map);
 }
@@ -110,6 +111,5 @@ int main(void)
 {
     printf("HASHMAP TEST\n");
     test_insert_get();
-    test_total();
     return 0;
 }

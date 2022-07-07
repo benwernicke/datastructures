@@ -1,8 +1,6 @@
 #ifndef SET_H
 #define SET_H
 
-#include "../ds_error/ds_error.h"
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -19,8 +17,8 @@ typedef uintptr_t set_iterator_t;
 bool set_contains(set_t* set, void* key);
 void set_free(set_t* set);
 
-ds_error_t set_create(set_t** set, set_hash_function_t hash, set_cmp_function_t cmp, uint64_t initial_size);
-ds_error_t set_insert(set_t* set, void* key);
+set_t* set_create(set_hash_function_t hash, set_cmp_function_t cmp, uint64_t initial_size);
+int set_insert(set_t* set, void* key);
 
 void set_delete(set_t* set, void* key);
 uint64_t set_size(set_t* set);
