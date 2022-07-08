@@ -1,11 +1,11 @@
 #include "map.h"
 
-static int check_realloc_(map_t* map);
-static uint64_t map_position_(map_t* map, void* key);
-static uint64_t stack_pop_(map_t* map, uint64_t* stack);
-static void stack_push_buf_(map_t* map, uint64_t* stack, uint64_t iter, uint64_t size);
-static void stack_push_(map_t* map, uint64_t* stack, uint64_t i);
-static uint64_t map_size_(map_t* map);
+static inline int check_realloc_(map_t* map);
+static inline uint64_t map_position_(map_t* map, void* key);
+static inline uint64_t stack_pop_(map_t* map, uint64_t* stack);
+static inline void stack_push_buf_(map_t* map, uint64_t* stack, uint64_t iter, uint64_t size);
+static inline void stack_push_(map_t* map, uint64_t* stack, uint64_t i);
+static inline uint64_t map_size_(map_t* map);
 
 typedef struct entry_t entry_t;
 struct entry_t {
@@ -57,7 +57,7 @@ void* map_check_and_insert(map_t* map, void* key, void* value, uint64_t* pos)
     }
 }
 
-static uint64_t map_size_(map_t* map)
+static inline uint64_t map_size_(map_t* map)
 {
     return map->buf_allocated << 2;
 }
@@ -98,7 +98,7 @@ void map_free(map_t* map)
     free(map);
 }
 
-static void stack_push_(map_t* map, uint64_t* stack, uint64_t i)
+static inline void stack_push_(map_t* map, uint64_t* stack, uint64_t i)
 {
     map->buf[i].prev = -1;
     if (*stack != -1) {
@@ -108,14 +108,14 @@ static void stack_push_(map_t* map, uint64_t* stack, uint64_t i)
     *stack = i;
 }
 
-static void stack_push_buf_(map_t* map, uint64_t* stack, uint64_t iter, uint64_t size)
+static inline void stack_push_buf_(map_t* map, uint64_t* stack, uint64_t iter, uint64_t size)
 {
     for (; iter < size; iter++) {
         stack_push_(map, stack, iter);
     }
 }
 
-static uint64_t stack_pop_(map_t* map, uint64_t* stack)
+static inline uint64_t stack_pop_(map_t* map, uint64_t* stack)
 {
     uint64_t r = *stack;
     *stack = map->buf[*stack].next;
@@ -125,7 +125,7 @@ static uint64_t stack_pop_(map_t* map, uint64_t* stack)
     return r;
 }
 
-static uint64_t stack_pop_position_(map_t* map, uint64_t* stack, uint64_t pos)
+static inline uint64_t stack_pop_position_(map_t* map, uint64_t* stack, uint64_t pos)
 {
     uint64_t prev = map->buf[pos].prev;
     uint64_t next = map->buf[pos].next;
@@ -138,7 +138,7 @@ static uint64_t stack_pop_position_(map_t* map, uint64_t* stack, uint64_t pos)
     return pos;
 }
 
-static uint64_t map_position_(map_t* map, void* key)
+static inline uint64_t map_position_(map_t* map, void* key)
 {
     uint64_t i = map->hash(key) % map_size_(map);
     while (map->map[i] != -1 && !map->cmp(key, map->buf[map->map[i]].key)) {
@@ -147,7 +147,7 @@ static uint64_t map_position_(map_t* map, void* key)
     return i;
 }
 
-static int check_realloc_(map_t* map)
+static inline int check_realloc_(map_t* map)
 {
     if (map->unused_stack != -1) {
         return 0;

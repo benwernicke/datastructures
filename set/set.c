@@ -1,11 +1,11 @@
 #include "set.h"
 
-static int check_realloc_(set_t* set);
-static uint64_t set_position_(set_t* set, void* key);
-static uint64_t stack_pop_(set_t* set, uint64_t* stack);
-static void stack_push_buf_(set_t* set, uint64_t* stack, uint64_t iter, uint64_t size);
-static void stack_push_(set_t* set, uint64_t* stack, uint64_t i);
-static uint64_t set_size_(set_t* set);
+static inline int check_realloc_(set_t* set);
+static inline uint64_t set_position_(set_t* set, void* key);
+static inline uint64_t stack_pop_(set_t* set, uint64_t* stack);
+static inline void stack_push_buf_(set_t* set, uint64_t* stack, uint64_t iter, uint64_t size);
+static inline void stack_push_(set_t* set, uint64_t* stack, uint64_t i);
+static inline uint64_t set_size_(set_t* set);
 
 typedef struct entry_t entry_t;
 struct entry_t {
@@ -29,7 +29,7 @@ struct set_t {
     uint64_t size;
 };
 
-static uint64_t set_size_(set_t* set)
+static inline uint64_t set_size_(set_t* set)
 {
     return set->buf_allocated << 2;
 }
@@ -70,7 +70,7 @@ void set_free(set_t* set)
     free(set);
 }
 
-static void stack_push_(set_t* set, uint64_t* stack, uint64_t i)
+static inline void stack_push_(set_t* set, uint64_t* stack, uint64_t i)
 {
     set->buf[i].prev = -1;
     if (*stack != -1) {
@@ -80,14 +80,14 @@ static void stack_push_(set_t* set, uint64_t* stack, uint64_t i)
     *stack = i;
 }
 
-static void stack_push_buf_(set_t* set, uint64_t* stack, uint64_t iter, uint64_t size)
+static inline void stack_push_buf_(set_t* set, uint64_t* stack, uint64_t iter, uint64_t size)
 {
     for (; iter < size; iter++) {
         stack_push_(set, stack, iter);
     }
 }
 
-static uint64_t stack_pop_(set_t* set, uint64_t* stack)
+static inline uint64_t stack_pop_(set_t* set, uint64_t* stack)
 {
     uint64_t r = *stack;
     *stack = set->buf[*stack].next;
@@ -97,7 +97,7 @@ static uint64_t stack_pop_(set_t* set, uint64_t* stack)
     return r;
 }
 
-static uint64_t stack_pop_position_(set_t* set, uint64_t* stack, uint64_t pos)
+static inline uint64_t stack_pop_position_(set_t* set, uint64_t* stack, uint64_t pos)
 {
     uint64_t prev = set->buf[pos].prev;
     uint64_t next = set->buf[pos].next;
@@ -110,7 +110,7 @@ static uint64_t stack_pop_position_(set_t* set, uint64_t* stack, uint64_t pos)
     return pos;
 }
 
-static uint64_t set_position_(set_t* set, void* key)
+static inline uint64_t set_position_(set_t* set, void* key)
 {
     uint64_t i = set->hash(key) % set_size_(set);
     while (set->set[i] != -1 && !set->cmp(key, set->buf[set->set[i]].key)) {
@@ -119,7 +119,7 @@ static uint64_t set_position_(set_t* set, void* key)
     return i;
 }
 
-static int check_realloc_(set_t* set)
+static inline int check_realloc_(set_t* set)
 {
     if (set->unused_stack != -1) {
         return 0;
