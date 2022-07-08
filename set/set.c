@@ -1,41 +1,41 @@
 #include "set.h"
 
 static inline int check_realloc_(set_t* set);
-static inline uint64_t set_position_(set_t* set, void* key, uint64_t* buf_position, uint64_t* chain);
+static inline SET_INT set_position_(set_t* set, void* key, SET_INT* buf_position, SET_INT* chain);
 
-static inline uint64_t stack_pop_(set_t* set, uint64_t* stack);
-static inline void stack_push_buf_(set_t* set, uint64_t* stack, uint64_t iter, uint64_t size);
-static inline void stack_push_(set_t* set, uint64_t* stack, uint64_t i);
-static inline uint64_t set_size_(set_t* set);
+static inline SET_INT stack_pop_(set_t* set, SET_INT* stack);
+static inline void stack_push_buf_(set_t* set, SET_INT* stack, SET_INT iter, SET_INT size);
+static inline void stack_push_(set_t* set, SET_INT* stack, SET_INT i);
+static inline SET_INT set_size_(set_t* set);
 
 typedef struct entry_t entry_t;
 struct entry_t {
     void* key;
-    uint64_t next;
-    uint64_t prev;
-    uint64_t chain;
+    SET_INT next;
+    SET_INT prev;
+    SET_INT chain;
 };
 
 struct set_t {
-    uint64_t buf_allocated;
+    SET_INT buf_allocated;
     entry_t* buf;
-    uint64_t* set;
+    SET_INT* set;
 
-    uint64_t unused_stack;
-    uint64_t used_stack;
+    SET_INT unused_stack;
+    SET_INT used_stack;
 
     set_hash_function_t hash;
     set_cmp_function_t cmp;
 
-    uint64_t size;
+    SET_INT size;
 };
 
-static inline uint64_t set_size_(set_t* set)
+static inline SET_INT set_size_(set_t* set)
 {
     return set->buf_allocated << 2;
 }
 
-set_t* set_create(set_hash_function_t hash, set_cmp_function_t cmp, uint64_t initial_size)
+set_t* set_create(set_hash_function_t hash, set_cmp_function_t cmp, SET_INT initial_size)
 {
     set_t* set = malloc(sizeof(*set));
     if (set == NULL) {
@@ -71,7 +71,7 @@ void set_free(set_t* set)
     free(set);
 }
 
-static inline void stack_push_(set_t* set, uint64_t* stack, uint64_t i)
+static inline void stack_push_(set_t* set, SET_INT* stack, SET_INT i)
 {
     set->buf[i].prev = -1;
     if (*stack != -1) {
@@ -81,16 +81,16 @@ static inline void stack_push_(set_t* set, uint64_t* stack, uint64_t i)
     *stack = i;
 }
 
-static inline void stack_push_buf_(set_t* set, uint64_t* stack, uint64_t iter, uint64_t size)
+static inline void stack_push_buf_(set_t* set, SET_INT* stack, SET_INT iter, SET_INT size)
 {
     for (; iter < size; iter++) {
         stack_push_(set, stack, iter);
     }
 }
 
-static inline uint64_t stack_pop_(set_t* set, uint64_t* stack)
+static inline SET_INT stack_pop_(set_t* set, SET_INT* stack)
 {
-    uint64_t r = *stack;
+    SET_INT r = *stack;
     *stack = set->buf[*stack].next;
     if (*stack != -1) {
         set->buf[*stack].prev = -1;
@@ -98,10 +98,10 @@ static inline uint64_t stack_pop_(set_t* set, uint64_t* stack)
     return r;
 }
 
-static inline uint64_t stack_pop_position_(set_t* set, uint64_t* stack, uint64_t pos)
+static inline SET_INT stack_pop_position_(set_t* set, SET_INT* stack, SET_INT pos)
 {
-    uint64_t prev = set->buf[pos].prev;
-    uint64_t next = set->buf[pos].next;
+    SET_INT prev = set->buf[pos].prev;
+    SET_INT next = set->buf[pos].next;
     if (next != -1) {
         set->buf[next].prev = prev;
     }
@@ -110,9 +110,9 @@ static inline uint64_t stack_pop_position_(set_t* set, uint64_t* stack, uint64_t
     }
     return pos;
 }
-static inline uint64_t set_position_(set_t* set, void* key, uint64_t* buf_position, uint64_t* chain)
+static inline SET_INT set_position_(set_t* set, void* key, SET_INT* buf_position, SET_INT* chain)
 {
-    uint64_t hash = set->hash(key) % set_size_(set);
+    SET_INT hash = set->hash(key) % set_size_(set);
     *buf_position = set->set[hash];
     *chain = -1;
     while (*buf_position != -1 && !set->cmp(key, set->buf[*buf_position].key)) {
@@ -128,10 +128,10 @@ static inline int check_realloc_(set_t* set)
         return 0;
     }
 
-    uint64_t old_allocated = set->buf_allocated;
+    SET_INT old_allocated = set->buf_allocated;
     set->buf_allocated <<= 1;
     entry_t* new_buf = realloc(set->buf, set->buf_allocated * sizeof(*new_buf));
-    uint64_t* new_set = realloc(set->set, set_size_(set) * sizeof(*new_set));
+    SET_INT* new_set = realloc(set->set, set_size_(set) * sizeof(*new_set));
 
     if (new_set == NULL || new_buf == NULL) {
         set->buf_allocated = old_allocated;
@@ -145,10 +145,10 @@ static inline int check_realloc_(set_t* set)
     memset(set->set, 0xFF, set_size_(set) * sizeof(*set->set));
     stack_push_buf_(set, &set->unused_stack, old_allocated, set->buf_allocated);
 
-    uint64_t i;
-    uint64_t chain;
-    uint64_t buf_position;
-    uint64_t hash;
+    SET_INT i;
+    SET_INT chain;
+    SET_INT buf_position;
+    SET_INT hash;
     for (i = 0; i < old_allocated; i++) {
         hash = set_position_(set, set->buf[i].key, &buf_position, &chain);
         if (chain == -1) {
@@ -169,9 +169,9 @@ int set_insert(set_t* set, void* key)
             return err;
         }
     }
-    uint64_t buf_position;
-    uint64_t chain;
-    uint64_t hash = set_position_(set, key, &buf_position, &chain);
+    SET_INT buf_position;
+    SET_INT chain;
+    SET_INT hash = set_position_(set, key, &buf_position, &chain);
 
     if (buf_position == -1) {
         buf_position = stack_pop_(set, &set->unused_stack);
@@ -190,9 +190,9 @@ int set_insert(set_t* set, void* key)
 
 void set_delete(set_t* set, void* key)
 {
-    uint64_t chain;
-    uint64_t buf_position;
-    uint64_t hash = set_position_(set, key, &buf_position, &chain);
+    SET_INT chain;
+    SET_INT buf_position;
+    SET_INT hash = set_position_(set, key, &buf_position, &chain);
     if (buf_position != -1) {
         stack_pop_position_(set, &set->used_stack, buf_position);
         stack_push_(set, &set->unused_stack, buf_position);
@@ -218,17 +218,17 @@ set_iterator_t set_iterator_next(set_t* set, set_iterator_t iter)
     return set->buf[iter].next;
 }
 
-uint64_t set_size(set_t* set)
+SET_INT set_size(set_t* set)
 {
     return set->size;
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------
 
-uint64_t set_str_hash(void* key)
+SET_INT set_str_hash(void* key)
 {
     char* s = key;
-    uint64_t h = 86969;
+    SET_INT h = 86969;
     while (*s) {
         h = (h * 54059) ^ (s[0] * 76963);
         s++;
@@ -236,10 +236,10 @@ uint64_t set_str_hash(void* key)
     return h;
 }
 
-uint64_t set_str_jenkins(void* key)
+SET_INT set_str_jenkins(void* key)
 {
     char* s = key;
-    uint64_t hash = 0;
+    SET_INT hash = 0;
     char c;
     while ((c = *s++)) {
         hash += c;
@@ -259,17 +259,17 @@ bool set_str_cmp(void* a, void* b)
 
 bool set_contains(set_t* set, void* key)
 {
-    uint64_t buf_position;
-    uint64_t chain;
+    SET_INT buf_position;
+    SET_INT chain;
     set_position_(set, key, &buf_position, &chain);
     return buf_position != -1;
 }
 
-uint64_t set_str_djb2(void* key)
+SET_INT set_str_djb2(void* key)
 {
     char* s = key;
     char c;
-    uint64_t hash = 5381;
+    SET_INT hash = 5381;
     while ((c = *s++)) {
         hash = ((hash << 5) + hash) + c;
     }
@@ -313,24 +313,34 @@ bool set_u32_cmp(void* a, void* b)
 
 bool set_u64_cmp(void* a, void* b)
 {
-    return *(uint64_t*)a == *(uint64_t*)b;
+    return *(SET_INT*)a == *(SET_INT*)b;
 }
 
-uint64_t set_b64_self(void* key)
+SET_INT set_b64_self(void* key)
 {
-    return *(uint64_t*)key;
+    return *(SET_INT*)key;
 }
 
-uint64_t set_b32_self(void* key)
+SET_INT set_b32_self(void* key)
 {
     return *(uint32_t*)key;
 }
 
-uint64_t set_b16_self(void* key)
+SET_INT set_b16_self(void* key)
 {
     return *(uint16_t*)key;
 }
-uint64_t set_b8_self(void* key)
+SET_INT set_b8_self(void* key)
 {
     return *(uint8_t*)key;
+}
+
+SET_INT set_ptr_self(void* key)
+{
+    return (SET_INT)(uintptr_t)key;
+}
+
+bool set_ptr_cmp(void* a, void* b)
+{
+    return a == b;
 }
