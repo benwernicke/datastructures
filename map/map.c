@@ -37,7 +37,7 @@ void* map_check_and_insert(map_t* map, void* key, void* value, uint64_t* pos)
         if (map->map[*pos] == -1) {
             return NULL;
         } else {
-            return map->buf[*pos].value;
+            return map->buf[map->map[*pos]].value;
         }
     } else {
         int err = check_realloc_(map);
