@@ -1,10 +1,7 @@
 #include "map.h"
 
 static inline int check_realloc_(map_t* map);
-
-/*static inline uint64_t map_position_(map_t* map, void* key);*/
 static inline uint64_t map_position_(map_t* map, void* key, uint64_t* buf_position, uint64_t* chain);
-
 static inline uint64_t stack_pop_(map_t* map, uint64_t* stack);
 static inline void stack_push_buf_(map_t* map, uint64_t* stack, uint64_t iter, uint64_t size);
 static inline void stack_push_(map_t* map, uint64_t* stack, uint64_t i);
@@ -17,6 +14,7 @@ struct entry_t {
 
     uint64_t next;
     uint64_t prev;
+
     uint64_t chain;
 };
 
@@ -33,33 +31,6 @@ struct map_t {
 
     uint64_t size;
 };
-
-/*void* map_check_and_insert(map_t* map, void* key, void* value, uint64_t* pos)*/
-/*{*/
-    /*if (value == NULL) {*/
-        /**pos = map_position_(map, key);*/
-        /*if (map->map[*pos] == -1) {*/
-            /*return NULL;*/
-        /*} else {*/
-            /*return map->buf[map->map[*pos]].value;*/
-        /*}*/
-    /*} else {*/
-        /*int err = check_realloc_(map);*/
-        /*if (err < 0) {*/
-            /*return NULL;*/
-        /*}*/
-        /*if (err > 0) {*/
-            /*map_insert(map, key, value);*/
-            /*return (void*)1;*/
-        /*}*/
-        /*uint64_t n = stack_pop_(map, &map->unused_stack);*/
-        /*map->map[*pos] = n;*/
-        /*map->buf[n].key = key;*/
-        /*map->buf[n].value = value;*/
-        /*stack_push_(map, &map->used_stack, n);*/
-        /*return (void*)1;*/
-    /*}*/
-/*}*/
 
 static inline uint64_t map_size_(map_t* map)
 {
@@ -141,6 +112,7 @@ static inline uint64_t stack_pop_position_(map_t* map, uint64_t* stack, uint64_t
     }
     return pos;
 }
+
 static inline uint64_t map_position_(map_t* map, void* key, uint64_t* buf_position, uint64_t* chain)
 {
     uint64_t hash = map->hash(key) % map_size_(map);
@@ -154,15 +126,6 @@ static inline uint64_t map_position_(map_t* map, void* key, uint64_t* buf_positi
     *buf_position = i;
     return hash;
 }
-
-/*static inline uint64_t map_position_(map_t* map, void* key)*/
-/*{*/
-    /*uint64_t i = map->hash(key) % map_size_(map);*/
-    /*while (map->map[i] != -1 && !map->cmp(key, map->buf[map->map[i]].key)) {*/
-        /*i = (i + 1) % map_size_(map);*/
-    /*}*/
-    /*return i;*/
-/*}*/
 
 static inline int check_realloc_(map_t* map)
 {
@@ -188,21 +151,17 @@ static inline int check_realloc_(map_t* map)
     stack_push_buf_(map, &map->unused_stack, old_allocated, map->buf_allocated);
 
     uint64_t i;
-    /*for (i = 0; i < old_allocated; i++) {*/
-        /*map->map[map_position_(map, map->buf[i].key)] = i;*/
-    /*}*/
-
     uint64_t chain;
     uint64_t buf_position;
     uint64_t hash;
     for (i = 0; i < old_allocated; i++) {
         hash = map_position_(map, map->buf[i].key, &buf_position, &chain);
         if (chain == -1) {
-            map->map[hash] = i;
+            map->map[hash] = buf_position;
         } else {
-            map->buf[chain].chain = i;
+            map->buf[chain].chain = buf_position;
         }
-        map->buf[i].chain = -1;
+        map->buf[buf_position].chain = -1;
         /*map->map[map_position_(map, map->buf[i].key)] = i;*/
     }
     return 1;
@@ -233,32 +192,22 @@ int map_insert(map_t* map, void* key, void* value)
         }
     }
     map->buf[buf_position].value = value;
+
+    /*if (map->map[i] == -1) {*/
+    /*uint64_t n = stack_pop_(map, &map->unused_stack);*/
+    /*stack_push_(map, &map->used_stack, n);*/
+    /*if (n == -1) {*/
+    /*return -1;*/
+    /*}*/
+    /*map->map[i] = n;*/
+    /*map->buf[map->map[i]].key = key;*/
+    /*map->size++;*/
+    /*}*/
+    /*map->buf[map->map[i]].value = value;*/
     return 0;
 }
 
-/*int map_insert(map_t* map, void* key, void* value)*/
-/*{*/
-    /*{*/
-        /*int err = check_realloc_(map);*/
-        /*if (err < 0) {*/
-            /*return err;*/
-        /*}*/
-    /*}*/
-    /*uint64_t i = map_position_(map, key);*/
-    /*if (map->map[i] == -1) {*/
-        /*uint64_t n = stack_pop_(map, &map->unused_stack);*/
-        /*stack_push_(map, &map->used_stack, n);*/
-        /*if (n == -1) {*/
-            /*return -1;*/
-        /*}*/
-        /*map->map[i] = n;*/
-        /*map->buf[map->map[i]].key = key;*/
-        /*map->size++;*/
-    /*}*/
-    /*map->buf[map->map[i]].value = value;*/
-    /*return 0;*/
-/*}*/
-
+// is NULL a valid value
 void* map_get(map_t* map, void* key)
 {
     /*void* value = NULL;*/
@@ -277,28 +226,17 @@ void* map_get(map_t* map, void* key)
     /*return value;*/
 }
 
-/*void* map_get(map_t* map, void* key)*/
-/*{*/
-    /*void* value = NULL;*/
-    /*uint64_t i = map_position_(map, key);*/
-    /*if (map->map[i] == -1) {*/
-        /*value = NULL;*/
-    /*} else {*/
-        /*value = map->buf[map->map[i]].value;*/
-    /*}*/
-    /*return value;*/
-/*}*/
-
 /*void map_delete(map_t* map, void* key)*/
 /*{*/
-    /*uint64_t i = map_position_(map, key);*/
-    /*uint64_t n = map->map[i];*/
-    /*if (n != -1) {*/
-        /*stack_pop_position_(map, &map->used_stack, n);*/
-        /*stack_push_(map, &map->unused_stack, n);*/
-        /*map->map[i] = -1;*/
-        /*map->size--;*/
-    /*}*/
+/*uint*/
+/*uint64_t i = map_position_(map, key);*/
+/*uint64_t n = map->map[i];*/
+/*if (n != -1) {*/
+/*stack_pop_position_(map, &map->used_stack, n);*/
+/*stack_push_(map, &map->unused_stack, n);*/
+/*map->map[i] = -1;*/
+/*map->size--;*/
+/*}*/
 /*}*/
 
 void* map_iterator_key(map_t* map, map_iterator_t iter)
@@ -360,17 +298,13 @@ bool map_str_cmp(void* a, void* b)
 
 bool map_contains(map_t* map, void* key)
 {
+    /*uint64_t i = map_position_(map, key);*/
     uint64_t buf_position;
     uint64_t chain;
     map_position_(map, key, &buf_position, &chain);
+    /*return map->map[i] != -1;*/
     return buf_position != -1;
 }
-
-/*bool map_contains(map_t* map, void* key)*/
-/*{*/
-    /*uint64_t i = map_position_(map, key);*/
-    /*return map->map[i] != -1;*/
-/*}*/
 
 uint64_t map_str_djb2(void* key)
 {
