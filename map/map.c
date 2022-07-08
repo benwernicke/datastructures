@@ -30,6 +30,33 @@ struct map_t {
     uint64_t size;
 };
 
+void* map_check_and_insert(map_t* map, void* key, void* value, uint64_t* pos)
+{
+    if (value == NULL) {
+        *pos = map_position_(map, key);
+        if (map->map[*pos] == -1) {
+            return NULL;
+        } else {
+            return map->buf[*pos].value;
+        }
+    } else {
+        int err = check_realloc_(map);
+        if (err < 0) {
+            return NULL;
+        }
+        if (err > 0) {
+            map_insert(map, key, value);
+            return (void*)1;
+        }
+        uint64_t n = stack_pop_(map, &map->unused_stack);
+        map->map[*pos] = n;
+        map->buf[n].key = key;
+        map->buf[n].value = value;
+        stack_push_(map, &map->used_stack, n);
+        return (void*)1;
+    }
+}
+
 static uint64_t map_size_(map_t* map)
 {
     return map->buf_allocated << 2;
@@ -147,14 +174,14 @@ static int check_realloc_(map_t* map)
     for (i = 0; i < old_allocated; i++) {
         map->map[map_position_(map, map->buf[i].key)] = i;
     }
-    return 0;
+    return 1;
 }
 
 int map_insert(map_t* map, void* key, void* value)
 {
     {
         int err = check_realloc_(map);
-        if (err != 0) {
+        if (err < 0) {
             return err;
         }
     }

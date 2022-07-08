@@ -13,6 +13,8 @@ typedef bool (*map_cmp_function_t)(void* a, void* b);
 
 typedef uintptr_t map_iterator_t;
 
+void* map_check_and_insert(map_t* map, void* key, void* value, uint64_t* pos);
+
 void* map_get(map_t* map, void* key);
 void map_free(map_t* map);
 
