@@ -3,9 +3,14 @@
 
 #define NUM_TESTS 10
 
+bool u64_cmp(void* a, void* b)
+{
+    return *(uint64_t*)a == *(uint64_t*)b;
+}
+
 void test_delete(void)
 {
-    map_t* map = map_create(map_b64_self, map_u64_cmp, 1);
+    map_t* map = map_create(u64_cmp, 1);
     if (map == NULL) {
         fprintf(stderr, "error: create %s\n", __func__);
         exit(1);
@@ -20,13 +25,13 @@ void test_delete(void)
     uint64_t* value;
 
     for (i = 0; i < NUM_TESTS; i++) {
-        value = map_get(map, &nums[i]);
+        value = map_get(map, nums[i], &nums[i]);
         test(value == NULL);
     }
 
     int err;
     for (i = 0; i < NUM_TESTS; i++) {
-        err = map_insert(map, &nums[i], &nums[i]);
+        err = map_insert(map, nums[i], &nums[i], &nums[i]);
         if (err != 0) {
             fprintf(stderr, "error: create %s\n", __func__);
             exit(1);
@@ -34,12 +39,12 @@ void test_delete(void)
     }
 
     for (i = 0; i < NUM_TESTS; i++) {
-        if (i % 2 == 0) {
-            map_delete(map, &nums[i]);
+        if (nums[i] % 2 == 0) {
+            map_delete(map, nums[i], &nums[i]);
         }
     }
     for (i = 0; i < NUM_TESTS; i++) {
-        value = map_get(map, &nums[i]);
+        value = map_get(map, nums[i], &nums[i]);
         if (i % 2 == 0) {
             test(value == NULL);
         } else {
@@ -51,7 +56,7 @@ void test_delete(void)
 
 void test_insert_get(void)
 {
-    map_t* map = map_create(map_b64_self, map_u64_cmp, 1);
+    map_t* map = map_create(u64_cmp, 1);
     if (map == NULL) {
         fprintf(stderr, "error: create %s\n", __func__);
         exit(1);
@@ -66,13 +71,13 @@ void test_insert_get(void)
     uint64_t* value;
 
     for (i = 0; i < NUM_TESTS; i++) {
-        value = map_get(map, &nums[i]);
+        value = map_get(map, nums[i], &nums[i]);
         test(value == NULL);
     }
 
     int err;
     for (i = 0; i < NUM_TESTS; i++) {
-        err = map_insert(map, &nums[i], &nums[i]);
+        err = map_insert(map, nums[i], &nums[i], &nums[i]);
         if (err != 0) {
             fprintf(stderr, "error: create %s\n", __func__);
             exit(1);
@@ -82,8 +87,8 @@ void test_insert_get(void)
     test(map_size(map) == NUM_TESTS);
 
     for (i = 0; i < NUM_TESTS; i++) {
-        test(map_contains(map, &nums[i]));
-        value = map_get(map, &nums[i]);
+        test(map_contains(map, nums[i], &nums[i]));
+        value = map_get(map, nums[i], &nums[i]);
         test(value != NULL);
         test(value == &nums[i]);
     }
@@ -108,7 +113,6 @@ void test_insert_get(void)
 
 int main(void)
 {
-    /*test_check_and_insert();*/
     printf("HASHMAP TEST\n");
     test_insert_get();
     test_delete();

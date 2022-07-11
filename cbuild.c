@@ -10,6 +10,13 @@ void compile_sv()
     compile_object_directory("sv/main", FLAGS, "sv/build/");
 }
 
+void compile_cmp()
+{
+    compile_object("cmp/cmp.c", FLAGS, "cmp/build/cmp.o");
+    compile_object("cmp/test_cmp.c", FLAGS, "cmp/build/test_cmp.o");
+    compile_object_directory("cmp/main", FLAGS, "cmp/build/");
+}
+
 void compile_vector()
 {
     compile_object("vector/vector.c", FLAGS, "vector/build/vector.o");
@@ -74,6 +81,7 @@ void valgrind()
     system("valgrind --show-leak-kinds=all --log-file=path/log.log --leak-check=full path/main");
     system("valgrind --show-leak-kinds=all --log-file=map/log.log --leak-check=full map/main");
     system("valgrind --show-leak-kinds=all --log-file=sv/log.log --leak-check=full sv/main");
+    system("valgrind --show-leak-kinds=all --log-file=cmp/log.log --leak-check=full cmp/main");
 
     printf("catting logs\n");
     system("touch log.log");
@@ -114,6 +122,7 @@ void compile_all()
     compile_path();
     compile_map();
     compile_sv();
+    compile_cmp();
 }
 
 int main(int argc, char** argv)
@@ -146,6 +155,9 @@ int main(int argc, char** argv)
         } else if (strcmp(argv[1], "sv") == 0) {
             compile_sv();
             system("sv/main");
+        } else if (strcmp(argv[1], "cmp") == 0) {
+            compile_cmp();
+            system("cmp/main");
         } else {
             fprintf(stderr, "unknown option: %s\n", argv[1]);
         }

@@ -3,26 +3,31 @@
 
 #define NUM_TESTS 10
 
+bool u64_cmp(void* a, void* b)
+{
+    return *(uint64_t*)a == *(uint64_t*)b;
+}
+
 void test_delete(void)
 {
-    set_t* set = set_create(set_b64_self, set_u64_cmp, 10);
+    set_t* set = set_create(u64_cmp, 10);
     uint64_t nums[NUM_TESTS];
     uint64_t i;
     for (i = 0; i < NUM_TESTS; i++) {
         nums[i] = i;
-        if (set_insert(set, &nums[i]) != 0) {
+        if (set_insert(set, nums[i], &nums[i]) != 0) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
     }
     for (i = 0; i < NUM_TESTS; i++) {
         if (i % 2 == 0) {
-            set_delete(set, &nums[i]);
+            set_delete(set, nums[i], &nums[i]);
         }
     }
 
     bool b;
     for (i = 0; i < NUM_TESTS; i++) {
-        b = set_contains(set, &nums[i]);
+        b = set_contains(set, nums[i], &nums[i]);
         if (i % 2 == 0) {
             test(!b);
         } else {
@@ -34,7 +39,7 @@ void test_delete(void)
 
 void test_get_set()
 {
-    set_t* set = set_create(set_b64_self, set_u64_cmp, 10);
+    set_t* set = set_create(u64_cmp, 10);
     srand(69);
     uint64_t i;
     uint64_t nums[NUM_TESTS];
@@ -42,13 +47,13 @@ void test_get_set()
         nums[i] = rand();
     }
     for (i = 0; i < NUM_TESTS; i++) {
-        if (set_insert(set, &nums[i]) != 0) {
+        if (set_insert(set, nums[i], &nums[i]) != 0) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
     }
     bool b;
     for (i = 0; i < NUM_TESTS; i++) {
-        b = set_contains(set, &nums[i]);
+        b = set_contains(set, nums[i], &nums[i]);
         test( b);
     }
     set_free(set);
@@ -56,7 +61,7 @@ void test_get_set()
 
 void test_get_keys_size()
 {
-    set_t* set = set_create(set_b64_self, set_u64_cmp, 10);
+    set_t* set = set_create(u64_cmp, 10);
     srand(69);
     uint64_t i;
     uint64_t nums[NUM_TESTS];
@@ -64,7 +69,7 @@ void test_get_keys_size()
         nums[i] = rand();
     }
     for (i = 0; i < NUM_TESTS; i++) {
-        if (set_insert(set, &nums[i]) != 0) {
+        if (set_insert(set, nums[i], &nums[i]) != 0) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
     }

@@ -1,7 +1,7 @@
 #include "map.h"
 
 static inline int check_realloc_(map_t* map);
-static inline MAP_INT map_position_(map_t* map, void* key, MAP_INT* buf_position, MAP_INT* chain);
+static inline MAP_INT map_position_(map_t* map, MAP_INT hash, void* key, MAP_INT* buf_position, MAP_INT* chain);
 
 static inline MAP_INT stack_pop_(map_t* map, MAP_INT* stack);
 static inline void stack_push_buf_(map_t* map, MAP_INT* stack, MAP_INT iter, MAP_INT size);
@@ -16,6 +16,7 @@ struct entry_t {
     MAP_INT next;
     MAP_INT prev;
     MAP_INT chain;
+    MAP_INT hash;
 };
 
 struct map_t {
@@ -26,7 +27,6 @@ struct map_t {
     MAP_INT unused_stack;
     MAP_INT used_stack;
 
-    map_hash_function_t hash;
     map_cmp_function_t cmp;
 
     MAP_INT size;
@@ -37,7 +37,7 @@ static inline MAP_INT map_size_(map_t* map)
     return map->buf_allocated << 2;
 }
 
-map_t* map_create(map_hash_function_t hash, map_cmp_function_t cmp, MAP_INT initial_size)
+map_t* map_create(map_cmp_function_t cmp, MAP_INT initial_size)
 {
     map_t* map = malloc(sizeof(*map));
     if (map == NULL) {
@@ -47,7 +47,6 @@ map_t* map_create(map_hash_function_t hash, map_cmp_function_t cmp, MAP_INT init
     map->unused_stack = -1;
     map->used_stack = -1;
     map->size = 0;
-    map->hash = hash;
     map->cmp = cmp;
 
     map->buf = malloc(initial_size * sizeof(*map->buf));
@@ -112,9 +111,9 @@ static inline MAP_INT stack_pop_position_(map_t* map, MAP_INT* stack, MAP_INT po
     }
     return pos;
 }
-static inline MAP_INT map_position_(map_t* map, void* key, MAP_INT* buf_position, MAP_INT* chain)
+static inline MAP_INT map_position_(map_t* map, MAP_INT hash, void* key, MAP_INT* buf_position, MAP_INT* chain)
 {
-    MAP_INT hash = map->hash(key) % map_size_(map);
+    hash %= map_size_(map);
     *buf_position = map->map[hash];
     *chain = -1;
     while (*buf_position != -1 && !map->cmp(key, map->buf[*buf_position].key)) {
@@ -150,11 +149,11 @@ static inline int check_realloc_(map_t* map)
     MAP_INT i;
     MAP_INT chain;
     MAP_INT buf_position;
-    MAP_INT hash;
+    MAP_INT map_pos;
     for (i = 0; i < old_allocated; i++) {
-        hash = map_position_(map, map->buf[i].key, &buf_position, &chain);
+        map_pos = map_position_(map, map->buf[i].hash, map->buf[i].key, &buf_position, &chain);
         if (chain == -1) {
-            map->map[hash] = i;
+            map->map[map_pos] = i;
         } else {
             map->buf[chain].chain = i;
         }
@@ -163,7 +162,7 @@ static inline int check_realloc_(map_t* map)
     return 1;
 }
 
-int map_insert(map_t* map, void* key, void* value)
+int map_insert(map_t* map, MAP_INT hash, void* key, void* value)
 {
     {
         int err = check_realloc_(map);
@@ -171,48 +170,49 @@ int map_insert(map_t* map, void* key, void* value)
             return err;
         }
     }
-    MAP_INT buf_position;
+    MAP_INT buf_pos;
     MAP_INT chain;
-    MAP_INT hash = map_position_(map, key, &buf_position, &chain);
+    MAP_INT map_pos = map_position_(map, hash, key, &buf_pos, &chain);
 
-    if (buf_position == -1) {
-        buf_position = stack_pop_(map, &map->unused_stack);
-        stack_push_(map, &map->used_stack, buf_position);
-        map->buf[buf_position].key = key;
+    if (buf_pos == -1) {
+        buf_pos = stack_pop_(map, &map->unused_stack);
+        stack_push_(map, &map->used_stack, buf_pos);
+        map->buf[buf_pos].key = key;
         map->size++;
-        map->buf[buf_position].chain = -1;
+        map->buf[buf_pos].chain = -1;
+        map->buf[buf_pos].hash = hash;
         if (chain == -1) {
-            map->map[hash] = buf_position;
+            map->map[map_pos] = buf_pos;
         } else {
-            map->buf[chain].chain = buf_position;
+            map->buf[chain].chain = buf_pos;
         }
     }
-    map->buf[buf_position].value = value;
+    map->buf[buf_pos].value = value;
     return 0;
 }
 
-void* map_get(map_t* map, void* key)
+void* map_get(map_t* map, MAP_INT hash, void* key)
 {
     MAP_INT buf_position;
     MAP_INT chain;
-    map_position_(map, key, &buf_position, &chain);
+    map_position_(map, hash, key, &buf_position, &chain);
     if (buf_position == -1) {
         return NULL;
     }
     return map->buf[buf_position].value;
 }
 
-void map_delete(map_t* map, void* key)
+void map_delete(map_t* map, MAP_INT hash, void* key)
 {
     MAP_INT chain;
-    MAP_INT buf_position;
-    MAP_INT hash = map_position_(map, key, &buf_position, &chain);
-    if (buf_position != -1) {
-        stack_pop_position_(map, &map->used_stack, buf_position);
-        stack_push_(map, &map->unused_stack, buf_position);
+    MAP_INT buf_pos;
+    MAP_INT map_pos = map_position_(map, hash, key, &buf_pos, &chain);
+    if (buf_pos != -1) {
+        stack_pop_position_(map, &map->used_stack, buf_pos);
+        stack_push_(map, &map->unused_stack, buf_pos);
         map->size--;
         if (chain == -1) {
-            map->map[hash] = -1;
+            map->map[map_pos] = -1;
         } else {
             map->buf[chain].chain = -1;
         }
@@ -242,53 +242,13 @@ MAP_INT map_size(map_t* map)
     return map->size;
 }
 
-//--------------------------------------------------------------------------------------------------------------------------------
-
-MAP_INT map_str_hash(void* key)
-{
-    char* s = key;
-    MAP_INT h = 86969;
-    while (*s) {
-        h = (h * 54059) ^ (s[0] * 76963);
-        s++;
-    }
-    return h;
-}
-
-MAP_INT map_str_jenkins(void* key)
-{
-    char* s = key;
-    MAP_INT hash = 0;
-    char c;
-    while ((c = *s++)) {
-        hash += c;
-        hash += hash << 10;
-        hash ^= hash >> 6;
-    }
-    hash += hash << 3;
-    hash ^= hash >> 11;
-    hash += hash << 15;
-    return hash;
-}
-
-bool map_str_cmp(void* a, void* b)
-{
-    return strcmp((char*)a, (char*)b) == 0;
-}
-
-bool map_contains(map_t* map, void* key)
+bool map_contains(map_t* map, MAP_INT hash, void* key)
 {
     MAP_INT buf_position;
     MAP_INT chain;
-    map_position_(map, key, &buf_position, &chain);
+    map_position_(map, hash, key, &buf_position, &chain);
     return buf_position != -1;
 }
-
-/*bool map_contains(map_t* map, void* key)*/
-/*{*/
-/*MAP_INT i = map_position_(map, key);*/
-/*return map->map[i] != -1;*/
-/*}*/
 
 MAP_INT map_str_djb2(void* key)
 {
