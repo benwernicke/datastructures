@@ -54,6 +54,7 @@ void clean()
     clean_one("buffer");
     clean_one("path");
     clean_one("sv");
+    clean_one("cmp");
 
     printf("rm log.log\n");
     system("rm log.log");
