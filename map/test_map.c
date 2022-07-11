@@ -1,16 +1,51 @@
+#include "../cmp/cmp.h"
 #include "../test/test.h"
 #include "map.h"
 
 #define NUM_TESTS 10
 
-bool u64_cmp(void* a, void* b)
+void test_get_or_delete(void)
 {
-    return *(uint64_t*)a == *(uint64_t*)b;
+    map_t* map = map_create(cmp_u64, 1);
+    if (map == NULL) {
+        fprintf(stderr, "error: create %s\n", __func__);
+        exit(1);
+    }
+
+    uint64_t nums[NUM_TESTS];
+    uint64_t values[NUM_TESTS] = { 0 };
+    uint64_t i;
+    for (i = 0; i < NUM_TESTS; i++) {
+        nums[i] = i;
+    }
+
+    uint64_t* value;
+
+    for (i = 0; i < NUM_TESTS; i++) {
+        value = map_get_or_insert(map, nums[i], &nums[i], &values[i]);
+        test(value == &values[i]);
+        test(*value == 0);
+    }
+
+    for (i = 0; i < NUM_TESTS; i++) {
+        value = map_get(map, nums[i], &nums[i]);
+        *value += 1;
+    }
+
+    for (i = 0; i < NUM_TESTS; i++) {
+        value = map_get_or_insert(map, nums[i], &nums[i], &values[i]);
+        test(value == &values[i]);
+        test(*value == 1);
+    }
+
+    test(map_size(map) == NUM_TESTS);
+
+    map_free(map);
 }
 
 void test_delete(void)
 {
-    map_t* map = map_create(u64_cmp, 1);
+    map_t* map = map_create(cmp_u64, 1);
     if (map == NULL) {
         fprintf(stderr, "error: create %s\n", __func__);
         exit(1);
@@ -56,7 +91,7 @@ void test_delete(void)
 
 void test_insert_get(void)
 {
-    map_t* map = map_create(u64_cmp, 1);
+    map_t* map = map_create(cmp_u64, 1);
     if (map == NULL) {
         fprintf(stderr, "error: create %s\n", __func__);
         exit(1);
@@ -115,6 +150,7 @@ int main(void)
 {
     printf("HASHMAP TEST\n");
     test_insert_get();
+    test_get_or_delete();
     test_delete();
     return 0;
 }

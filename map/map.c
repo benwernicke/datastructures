@@ -162,6 +162,39 @@ static inline int check_realloc_(map_t* map)
     return 1;
 }
 
+void* map_get_or_insert(map_t* map, MAP_INT hash, void* key, void* value)
+{
+    MAP_INT buf_pos;
+    MAP_INT chain;
+    MAP_INT map_pos = map_position_(map, hash, key, &buf_pos, &chain);
+    if (buf_pos != -1) {
+        return map->buf[buf_pos].value;
+    }
+    {
+        int err = check_realloc_(map);
+        if (err < 0) {
+            return NULL;
+        }
+        if (err > 0) {
+            map_pos = map_position_(map, hash, key, &buf_pos, &chain);
+        }
+    }
+
+    buf_pos = stack_pop_(map, &map->unused_stack);
+    stack_push_(map, &map->used_stack, buf_pos);
+    map->buf[buf_pos].key = key;
+    map->size++;
+    map->buf[buf_pos].chain = -1;
+    map->buf[buf_pos].hash = hash;
+    if (chain == -1) {
+        map->map[map_pos] = buf_pos;
+    } else {
+        map->buf[chain].chain = buf_pos;
+    }
+    map->buf[buf_pos].value = value;
+    return map->buf[buf_pos].value;
+}
+
 int map_insert(map_t* map, MAP_INT hash, void* key, void* value)
 {
     {

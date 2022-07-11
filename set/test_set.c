@@ -1,16 +1,31 @@
+#include "../cmp/cmp.h"
 #include "../test/test.h"
 #include "set.h"
 
-#define NUM_TESTS 10
+#define NUM_TESTS 1000
 
-bool u64_cmp(void* a, void* b)
+void test_contains_or_insert(void)
 {
-    return *(uint64_t*)a == *(uint64_t*)b;
+    set_t* set = set_create(cmp_u64, 10);
+    uint64_t nums[NUM_TESTS];
+    uint64_t i;
+    int r;
+    for (i = 0; i < NUM_TESTS; i++) {
+        nums[i] = i;
+        r = set_contains_or_insert(set, nums[i], &nums[i]);
+        test(r == 0);
+    }
+
+    for (i = 0; i < NUM_TESTS; i++) {
+        r = set_contains_or_insert(set, nums[i], &nums[i]);
+        test(r == 1);
+    }
+    set_free(set);
 }
 
 void test_delete(void)
 {
-    set_t* set = set_create(u64_cmp, 10);
+    set_t* set = set_create(cmp_u64, 10);
     uint64_t nums[NUM_TESTS];
     uint64_t i;
     for (i = 0; i < NUM_TESTS; i++) {
@@ -39,7 +54,7 @@ void test_delete(void)
 
 void test_get_set()
 {
-    set_t* set = set_create(u64_cmp, 10);
+    set_t* set = set_create(cmp_u64, 10);
     srand(69);
     uint64_t i;
     uint64_t nums[NUM_TESTS];
@@ -54,14 +69,14 @@ void test_get_set()
     bool b;
     for (i = 0; i < NUM_TESTS; i++) {
         b = set_contains(set, nums[i], &nums[i]);
-        test( b);
+        test(b);
     }
     set_free(set);
 }
 
 void test_get_keys_size()
 {
-    set_t* set = set_create(u64_cmp, 10);
+    set_t* set = set_create(cmp_u64, 10);
     srand(69);
     uint64_t i;
     uint64_t nums[NUM_TESTS];
@@ -95,6 +110,7 @@ int main(void)
 {
     printf("HASHSET TESTS\n");
     test_get_set();
+    test_contains_or_insert();
     test_delete();
     test_get_keys_size();
     return 0;

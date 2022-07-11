@@ -161,6 +161,41 @@ static inline int check_realloc_(set_t* set)
     return 1;
 }
 
+int set_contains_or_insert(set_t* set, SET_INT hash, void* key)
+{
+    SET_INT buf_pos;
+    SET_INT chain;
+    SET_INT set_pos = set_position_(set, hash, key, &buf_pos, &chain);
+
+    if (buf_pos != -1) {
+        return 1;
+    }
+
+    {
+        int err = check_realloc_(set);
+        if (err < 0) {
+            return err;
+        }
+        if (err > 0) {
+            set_pos = set_position_(set, hash, key, &buf_pos, &chain);
+        }
+    }
+
+    buf_pos = stack_pop_(set, &set->unused_stack);
+    stack_push_(set, &set->used_stack, buf_pos);
+    set->buf[buf_pos].key = key;
+    set->buf[buf_pos].hash = hash;
+    set->size++;
+    set->buf[buf_pos].chain = -1;
+    if (chain == -1) {
+        set->set[set_pos] = buf_pos;
+    } else {
+        set->buf[chain].chain = buf_pos;
+    }
+
+    return 0;
+}
+
 int set_insert(set_t* set, SET_INT hash, void* key)
 {
     {

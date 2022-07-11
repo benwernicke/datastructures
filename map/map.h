@@ -21,6 +21,7 @@ map_t* map_create(map_cmp_function_t cmp, MAP_INT initial_size);
 void map_free(map_t* map);
 
 int map_insert(map_t* map, MAP_INT hash, void* key, void* value);
+void* map_get_or_insert(map_t* map, MAP_INT hash, void* key, void* value);
 void* map_get(map_t* map, MAP_INT hash, void* key);
 void map_delete(map_t* map, MAP_INT hash, void* key);
 bool map_contains(map_t* map, MAP_INT hash, void* key);

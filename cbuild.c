@@ -26,6 +26,7 @@ void compile_vector()
 
 void compile_map()
 {
+    compile_object("cmp/cmp.c", FLAGS, "map/build/cmp.o");
     compile_object("map/map.c", FLAGS, "map/build/map.o");
     compile_object("map/test_map.c", FLAGS, "map/build/test_map.o");
     compile_object_directory("map/main", FLAGS, "map/build/");
@@ -69,6 +70,7 @@ void compile_buffer()
 
 void compile_set()
 {
+    compile_object("cmp/cmp.c", FLAGS, "set/build/cmp.o");
     compile_object("set/set.c", FLAGS, "set/build/set.o");
     compile_object("set/test_set.c", FLAGS, "set/build/test_set.o");
     compile_object_directory("set/main", FLAGS, "set/build/");

@@ -24,6 +24,7 @@ void set_free(set_t* set);
 int set_insert(set_t* set, SET_INT hash, void* key);
 void set_delete(set_t* set, SET_INT hash, void* key);
 bool set_contains(set_t* set, SET_INT hash, void* key);
+int set_contains_or_insert(set_t* set, SET_INT hash, void* key);
 
 SET_INT set_size(set_t* set);
 
