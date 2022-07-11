@@ -44,3 +44,8 @@ bool cmp_i8(void* a, void* b)
 {
     return *(int8_t*)a == *(int8_t*)b;
 }
+
+bool cmp_ptr(void* a, void* b)
+{
+    return a == b;
+}

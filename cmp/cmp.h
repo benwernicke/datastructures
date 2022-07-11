@@ -14,5 +14,6 @@ bool cmp_i64(void* a, void* b);
 bool cmp_i32(void* a, void* b);
 bool cmp_i16(void* a, void* b);
 bool cmp_i8(void* a, void* b);
+bool cmp_ptr(void* a, void* b);
 
 #endif
