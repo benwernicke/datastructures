@@ -3,6 +3,18 @@
 
 #define FLAGS "-g -Wall -pedantic"
 
+void splint(void)
+{
+    system("splint -nullstate set/set.c > set/log.log");
+    system("splint -nullstate vector/vector.c > vector/log.log");
+    system("splint -nullstate buffer/buffer.c > buffer/log.log");
+    system("splint -nullstate path/path.c > path/log.log");
+    system("splint -nullstate path/path.c > path/log.log");
+    system("splint -nullstate map/map.c > map/log.log");
+    system("splint -nullstate sv/sv.c > sv/log.log");
+    system("splint -nullstate cmp/cmp.c > cmp/log.log");
+}
+
 void compile_sv()
 {
     compile_object("sv/sv.c", FLAGS, "sv/build/sv.o");
@@ -120,9 +132,6 @@ void compile_all()
     compile_vector();
     compile_buffer();
     compile_path();
-    compile_vector();
-    compile_buffer();
-    compile_path();
     compile_map();
     compile_sv();
     compile_cmp();
@@ -161,6 +170,8 @@ int main(int argc, char** argv)
         } else if (strcmp(argv[1], "cmp") == 0) {
             compile_cmp();
             system("cmp/main");
+        } else if (strcmp(argv[1], "splint") == 0) {
+            splint();
         } else {
             fprintf(stderr, "unknown option: %s\n", argv[1]);
         }

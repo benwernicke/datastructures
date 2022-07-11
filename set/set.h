@@ -19,6 +19,7 @@ typedef SET_INT set_iterator_t;
 
 
 set_t* set_create(set_cmp_function_t cmp, SET_INT initial_size);
+
 void set_free(set_t* set);
 
 int set_insert(set_t* set, SET_INT hash, void* key);
