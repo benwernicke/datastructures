@@ -10,11 +10,12 @@ static inline SET_INT set_size_(set_t* set);
 
 typedef struct entry_t entry_t;
 struct entry_t {
-    SET_INT hash;
     void* key;
+
     SET_INT next;
     SET_INT prev;
     SET_INT chain;
+    SET_INT hash;
 };
 
 struct set_t {
@@ -25,7 +26,6 @@ struct set_t {
     SET_INT unused_stack;
     SET_INT used_stack;
 
-    set_hash_function_t hash;
     set_cmp_function_t cmp;
 
     SET_INT size;
@@ -56,7 +56,7 @@ set_t* set_create(set_cmp_function_t cmp, SET_INT initial_size)
         free(set);
         return NULL;
     }
-    set->set = memset(set->set, 0xFF, set_size_(set) * sizeof(*set->set));
+    memset(set->set, 0xFF, set_size_(set) * sizeof(*set->set));
     stack_push_buf_(set, &set->unused_stack, 0, set->buf_allocated);
     return set;
 }
@@ -98,7 +98,7 @@ static inline SET_INT stack_pop_(set_t* set, SET_INT* stack)
     return r;
 }
 
-static inline void stack_rm_position_(set_t* set, SET_INT pos)
+static inline SET_INT stack_pop_position_(set_t* set, SET_INT pos)
 {
     SET_INT prev = set->buf[pos].prev;
     SET_INT next = set->buf[pos].next;
@@ -108,6 +108,7 @@ static inline void stack_rm_position_(set_t* set, SET_INT pos)
     if (prev != (SET_INT)-1) {
         set->buf[prev].next = next;
     }
+    return pos;
 }
 static inline SET_INT set_position_(set_t* set, SET_INT hash, void* key, SET_INT* buf_position, SET_INT* chain)
 {
@@ -138,20 +139,20 @@ static inline int check_realloc_(set_t* set)
         free(new_set);
         return -1;
     }
+
     set->buf = new_buf;
     set->set = new_set;
-
     memset(set->set, 0xFF, set_size_(set) * sizeof(*set->set));
     stack_push_buf_(set, &set->unused_stack, old_allocated, set->buf_allocated);
 
-    SET_INT i = 0;
-    SET_INT chain = 0;
-    SET_INT buf_position = 0;
-    SET_INT hash = 0;
+    SET_INT i;
+    SET_INT chain;
+    SET_INT buf_position;
+    SET_INT set_pos;
     for (i = 0; i < old_allocated; i++) {
-        hash = set_position_(set, set->buf[i].hash, set->buf[i].key, &buf_position, &chain);
+        set_pos = set_position_(set, set->buf[i].hash, set->buf[i].key, &buf_position, &chain);
         if (chain == (SET_INT)-1) {
-            set->set[hash] = i;
+            set->set[set_pos] = i;
         } else {
             set->buf[chain].chain = i;
         }
@@ -160,16 +161,14 @@ static inline int check_realloc_(set_t* set)
     return 1;
 }
 
-int set_contains_or_insert(set_t* set, SET_INT hash, void* key)
+int set_insert(set_t* set, SET_INT hash, void* key)
 {
-    SET_INT buf_pos = 0;
-    SET_INT chain = 0;
+    SET_INT buf_pos;
+    SET_INT chain;
     SET_INT set_pos = set_position_(set, hash, key, &buf_pos, &chain);
-
     if (buf_pos != (SET_INT)-1) {
         return 1;
     }
-
     {
         int err = check_realloc_(set);
         if (err < 0) {
@@ -183,39 +182,9 @@ int set_contains_or_insert(set_t* set, SET_INT hash, void* key)
     buf_pos = stack_pop_(set, &set->unused_stack);
     stack_push_(set, &set->used_stack, buf_pos);
     set->buf[buf_pos].key = key;
-    set->buf[buf_pos].hash = hash;
     set->size++;
     set->buf[buf_pos].chain = -1;
-    if (chain == (SET_INT)-1) {
-        set->set[set_pos] = buf_pos;
-    } else {
-        set->buf[chain].chain = buf_pos;
-    }
-
-    return 0;
-}
-
-int set_insert(set_t* set, SET_INT hash, void* key)
-{
-
-    SET_INT buf_pos = 0;
-    SET_INT chain = 0;
-    SET_INT set_pos = set_position_(set, hash, key, &buf_pos, &chain);
-    if (buf_pos == (SET_INT)-1) {
-        return 0;
-    }
-    {
-        int err = check_realloc_(set);
-        if (err < 0) {
-            return err;
-        }
-    }
-    buf_pos = stack_pop_(set, &set->unused_stack);
-    stack_push_(set, &set->used_stack, buf_pos);
-    set->buf[buf_pos].key = key;
     set->buf[buf_pos].hash = hash;
-    set->size++;
-    set->buf[buf_pos].chain = (SET_INT)-1;
     if (chain == (SET_INT)-1) {
         set->set[set_pos] = buf_pos;
     } else {
@@ -226,12 +195,12 @@ int set_insert(set_t* set, SET_INT hash, void* key)
 
 void set_delete(set_t* set, SET_INT hash, void* key)
 {
-    SET_INT chain = 0;
-    SET_INT buf_position = 0;
-    SET_INT set_pos = set_position_(set, hash, key, &buf_position, &chain);
-    if (buf_position != (SET_INT)-1) {
-        stack_rm_position_(set, buf_position);
-        stack_push_(set, &set->unused_stack, buf_position);
+    SET_INT chain;
+    SET_INT buf_pos;
+    SET_INT set_pos = set_position_(set, hash, key, &buf_pos, &chain);
+    if (buf_pos != (SET_INT)-1) {
+        stack_pop_position_(set, buf_pos);
+        stack_push_(set, &set->unused_stack, buf_pos);
         set->size--;
         if (chain == (SET_INT)-1) {
             set->set[set_pos] = -1;
@@ -248,7 +217,7 @@ void* set_iterator_key(set_t* set, set_iterator_t iter)
 
 set_iterator_t set_iterator_next(set_t* set, set_iterator_t iter)
 {
-    if (iter == (set_iterator_t)-1) {
+    if (iter == (SET_INT)-1) {
         return set->used_stack;
     }
     return set->buf[iter].next;
@@ -261,8 +230,8 @@ SET_INT set_size(set_t* set)
 
 bool set_contains(set_t* set, SET_INT hash, void* key)
 {
-    SET_INT buf_position = 0;
-    SET_INT chain = 0;
+    SET_INT buf_position;
+    SET_INT chain;
     set_position_(set, hash, key, &buf_position, &chain);
     return buf_position != (SET_INT)-1;
 }

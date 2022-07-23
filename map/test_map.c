@@ -2,7 +2,7 @@
 #include "../test/test.h"
 #include "map.h"
 
-#define NUM_TESTS 10
+#define NUM_TESTS 10000
 
 void test_get_or_delete(void)
 {

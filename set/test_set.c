@@ -2,7 +2,7 @@
 #include "../test/test.h"
 #include "set.h"
 
-#define NUM_TESTS 1000
+#define NUM_TESTS 695
 
 void test_contains_or_insert(void)
 {
@@ -12,12 +12,12 @@ void test_contains_or_insert(void)
     int r;
     for (i = 0; i < NUM_TESTS; i++) {
         nums[i] = i;
-        r = set_contains_or_insert(set, nums[i], &nums[i]);
+        r = set_insert(set, nums[i], &nums[i]);
         test(r == 0);
     }
 
     for (i = 0; i < NUM_TESTS; i++) {
-        r = set_contains_or_insert(set, nums[i], &nums[i]);
+        r = set_insert(set, nums[i], &nums[i]);
         test(r == 1);
     }
     set_free(set);
@@ -30,7 +30,7 @@ void test_delete(void)
     uint64_t i;
     for (i = 0; i < NUM_TESTS; i++) {
         nums[i] = i;
-        if (set_insert(set, nums[i], &nums[i]) != 0) {
+        if (set_insert(set, nums[i], &nums[i]) < 0) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
     }
@@ -62,7 +62,7 @@ void test_get_set()
         nums[i] = rand();
     }
     for (i = 0; i < NUM_TESTS; i++) {
-        if (set_insert(set, nums[i], &nums[i]) != 0) {
+        if (set_insert(set, nums[i], &nums[i]) < 0) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
     }
@@ -84,7 +84,7 @@ void test_get_keys_size()
         nums[i] = rand();
     }
     for (i = 0; i < NUM_TESTS; i++) {
-        if (set_insert(set, nums[i], &nums[i]) != 0) {
+        if (set_insert(set, nums[i], &nums[i]) < 0) {
             fprintf(stderr, "something went wrong in %s\n", __func__);
         }
     }
